@@ -237,6 +237,20 @@ async function enumerateAudioDevices() {
 function setRecordingState(newState) {
   recordingState = newState;
 
+  // Manage recording session classes for responsive edge-to-edge layout
+  if (newState === 'recording' || newState === 'paused') {
+    document.body.classList.add('recording-session');
+    document.querySelector('.mobile-app-wrapper')?.classList.add('recording-session');
+    if (newState === 'recording') {
+      document.body.classList.add('is-recording');
+    } else {
+      document.body.classList.remove('is-recording');
+    }
+  } else {
+    document.body.classList.remove('recording-session', 'is-recording');
+    document.querySelector('.mobile-app-wrapper')?.classList.remove('recording-session', 'is-recording');
+  }
+
   if (newState === 'idle') {
     elements.controlsIdle?.classList.remove('d-none');
     elements.controlsRecording?.classList.add('d-none');

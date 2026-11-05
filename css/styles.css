@@ -645,6 +645,48 @@ html, body {
   .modal-dialog {
     margin: 16px;
   }
+  .translation-sheet.liquid-glass {
+    margin: max(10px, env(safe-area-inset-top)) 6px 0 6px;
+    border-radius: 20px;
+  }
+}
+
+/* Cell Phone Maximized Edge-to-Edge Panels During Recording Session */
+@media (max-width: 767px) {
+  body.recording-session .translation-sheet.liquid-glass,
+  .mobile-app-wrapper.recording-session .translation-sheet.liquid-glass {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: max(8px, env(safe-area-inset-top)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  body.recording-session .sheet-pane,
+  .mobile-app-wrapper.recording-session .sheet-pane {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  body.recording-session .action-controls-container,
+  .mobile-app-wrapper.recording-session .action-controls-container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    max-width: 100% !important;
+  }
+
+  body.recording-session .controls-row-recording,
+  body.recording-session .controls-row-paused,
+  .mobile-app-wrapper.recording-session .controls-row-recording,
+  .mobile-app-wrapper.recording-session .controls-row-paused {
+    max-width: 100% !important;
+  }
 }
 
 /* --- Text Size Bottom Sheet Modal (Matching Screenshot) --- */
