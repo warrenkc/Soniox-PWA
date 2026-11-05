@@ -1,9 +1,27 @@
 /**
- * Soniox PWA Main Application
+ * Soniox Translator PWA
+ * Mobile-first Speech-to-Text & Live Translation Application
  */
 import { SonioxService } from './soniox-service.js';
 import { UIManager } from './ui-manager.js';
 import { PWAInstaller } from './pwa-install.js';
+
+// Language Map
+const LANGUAGE_NAMES = {
+  any: 'Any',
+  en: 'English',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  zh: 'Chinese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  it: 'Italian',
+  pt: 'Portuguese',
+  ru: 'Russian',
+  ar: 'Arabic',
+  hi: 'Hindi',
+};
 
 // Initialize services
 const soniox = new SonioxService();
@@ -11,9 +29,11 @@ const ui = new UIManager();
 const pwa = new PWAInstaller();
 
 // State
-let currentMode = 'transcribe'; // 'transcribe' | 'translate-to' | 'translate-between'
+let recordingState = 'idle'; // 'idle' | 'recording' | 'paused'
 let appSettings = {
   model: 'stt-rt-preview',
+  sourceLanguage: 'any',
+  targetLanguage: 'en',
   enableSpeakerDiarization: true,
   enableLanguageIdentification: true,
   enableEndpointDetection: true,
@@ -21,44 +41,55 @@ let appSettings = {
   echoCancellation: true,
   noiseSuppression: true,
   autoGainControl: true,
-  languageHints: ['en'],
-  customTerms: '',
-  // Translation settings
-  targetLanguage: 'es',
-  languageA: 'en',
-  languageB: 'es',
+  languageHints: [],
+  customTerms: ''
 };
 
 // DOM Elements
 const elements = {
-  html: document.documentElement,
-  themeToggleBtn: document.getElementById('themeToggleBtn'),
-  themeIcon: document.getElementById('themeIcon'),
-  statusBadge: document.getElementById('statusBadge'),
-  statusDot: document.getElementById('statusDot'),
-  statusText: document.getElementById('statusText'),
-  timerDisplay: document.getElementById('timerDisplay'),
-  canvas: document.getElementById('audioVisualizer'),
-  recordBtn: document.getElementById('recordBtn'),
-  recordBtnIcon: document.getElementById('recordBtnIcon'),
-  recordBtnText: document.getElementById('recordBtnText'),
-  finalizeBtn: document.getElementById('finalizeBtn'),
-  cancelBtn: document.getElementById('cancelBtn'),
-  clearBtn: document.getElementById('clearBtn'),
-  // Mode views
-  viewTranscribe: document.getElementById('viewTranscribe'),
-  viewTranslateTo: document.getElementById('viewTranslateTo'),
-  viewTranslateBetween: document.getElementById('viewTranslateBetween'),
-  modeButtons: document.querySelectorAll('[data-mode]'),
-  // Containers
-  transcribeContainer: document.getElementById('transcribeContainer'),
+  // Translation Panes
   origTranslateContainer: document.getElementById('origTranslateContainer'),
   targetTranslateContainer: document.getElementById('targetTranslateContainer'),
-  dialogueContainer: document.getElementById('dialogueContainer'),
-  targetLanguageSelect: document.getElementById('targetLanguageSelect'),
-  translateDiarizationToggle: document.getElementById('translateDiarizationToggle'),
-  languageASelect: document.getElementById('languageASelect'),
-  languageBSelect: document.getElementById('languageBSelect'),
+  transPaneTitle: document.getElementById('transPaneTitle'),
+  transPlaceholderText: document.getElementById('transPlaceholderText'),
+  // Options Popover Menu
+  paneOptionsBtn: document.getElementById('paneOptionsBtn'),
+  paneOptionsMenu: document.getElementById('paneOptionsMenu'),
+  menuRotateBtn: document.getElementById('menuRotateBtn'),
+  menuCopyOrigBtn: document.getElementById('menuCopyOrigBtn'),
+  menuCopyTransBtn: document.getElementById('menuCopyTransBtn'),
+  menuCopyTransLabel: document.getElementById('menuCopyTransLabel'),
+  menuTextSizeBtn: document.getElementById('menuTextSizeBtn'),
+  // Language Selector Bar
+  languageSelectorBar: document.getElementById('languageSelectorBar'),
+  sourceLangPill: document.getElementById('sourceLangPill'),
+  sourceLangLabel: document.getElementById('sourceLangLabel'),
+  targetLangPill: document.getElementById('targetLangPill'),
+  targetLangLabel: document.getElementById('targetLangLabel'),
+  // Controls
+  controlsIdle: document.getElementById('controlsIdle'),
+  controlsRecording: document.getElementById('controlsRecording'),
+  controlsPaused: document.getElementById('controlsPaused'),
+  btnOpenSettings: document.getElementById('btnOpenSettings'),
+  btnStartListening: document.getElementById('btnStartListening'),
+  btnSaveToHistory: document.getElementById('btnSaveToHistory'),
+  btnPauseRecording: document.getElementById('btnPauseRecording'),
+  btnDiscardRecording: document.getElementById('btnDiscardRecording'),
+  btnResumeRecording: document.getElementById('btnResumeRecording'),
+  btnDoneRecording: document.getElementById('btnDoneRecording'),
+  // Timers
+  timerIdle: document.getElementById('timerIdle'),
+  timerRunning: document.getElementById('timerRunning'),
+  timerPaused: document.getElementById('timerPaused'),
+  // Bottom Tab Bar
+  bottomTabBar: document.getElementById('bottomTabBar'),
+  tabHistory: document.getElementById('tabHistory'),
+  tabTranslator: document.getElementById('tabTranslator'),
+  // Modals
+  settingsModalEl: document.getElementById('settingsModal'),
+  languageModalEl: document.getElementById('languageModal'),
+  exportModalEl: document.getElementById('exportModal'),
+  historyModalEl: document.getElementById('historyModal'),
   // Settings Inputs
   apiKeyInput: document.getElementById('apiKeyInput'),
   saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
@@ -73,88 +104,63 @@ const elements = {
   settingGain: document.getElementById('settingGain'),
   settingLangHints: document.getElementById('settingLangHints'),
   settingCustomTerms: document.getElementById('settingCustomTerms'),
-  // Font size
-  fontSizeIncreaseBtn: document.getElementById('fontSizeIncreaseBtn'),
-  fontSizeDecreaseBtn: document.getElementById('fontSizeDecreaseBtn'),
-  scrollToBottomBtn: document.getElementById('scrollToBottomBtn'),
-  // Modals
-  settingsModalEl: document.getElementById('settingsModal'),
-  apiKeyWarningBanner: document.getElementById('apiKeyWarningBanner'),
-  openSettingsBannerBtn: document.getElementById('openSettingsBannerBtn')
+  // Language Modal Selects
+  selectSourceLang: document.getElementById('selectSourceLang'),
+  selectTargetLang: document.getElementById('selectTargetLang'),
+  applyLanguageBtn: document.getElementById('applyLanguageBtn'),
+  // Export Buttons
+  exportTxtBtn: document.getElementById('exportTxtBtn'),
+  exportSrtBtn: document.getElementById('exportSrtBtn'),
+  exportJsonBtn: document.getElementById('exportJsonBtn'),
+  // History Elements
+  historyListContainer: document.getElementById('historyListContainer'),
+  clearHistoryBtn: document.getElementById('clearHistoryBtn'),
 };
 
-// Bootstrap Modal instance
-let settingsModal = null;
+// Bootstrap Modal Instances
+let modals = {};
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
-  if (window.bootstrap && elements.settingsModalEl) {
-    settingsModal = new window.bootstrap.Modal(elements.settingsModalEl);
+  if (window.bootstrap) {
+    if (elements.settingsModalEl) modals.settings = new window.bootstrap.Modal(elements.settingsModalEl);
+    if (elements.languageModalEl) modals.language = new window.bootstrap.Modal(elements.languageModalEl);
+    if (elements.exportModalEl) modals.export = new window.bootstrap.Modal(elements.exportModalEl);
+    if (elements.historyModalEl) modals.history = new window.bootstrap.Modal(elements.historyModalEl);
   }
 
   loadStoredSettings();
-  initTheme();
   ui.init();
   pwa.init();
+  updateLanguageUI();
   setupEventListeners();
   setupSonioxCallbacks();
   await enumerateAudioDevices();
 
-  // Listen for audio device changes (plugging in headphones/AirPods)
   if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
     navigator.mediaDevices.addEventListener('devicechange', enumerateAudioDevices);
   }
 
-  checkApiKeyNotice();
-
-  // Check URL query parameters for initial mode (e.g. ?mode=translate-to)
-  const urlParams = new URLSearchParams(window.location.search);
-  const initialMode = urlParams.get('mode');
-  if (initialMode && ['transcribe', 'translate-to', 'translate-between'].includes(initialMode)) {
-    switchMode(initialMode);
+  // Check if API key is configured
+  if (!soniox.getApiKey()) {
+    setTimeout(() => {
+      ui.showToast('Please enter your Soniox API Key in Settings', 'info');
+    }, 800);
   }
 });
 
-// --- Theme Management ---
-function initTheme() {
-  const savedTheme = localStorage.getItem('soniox_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  setTheme(savedTheme);
-
-  elements.themeToggleBtn?.addEventListener('click', () => {
-    const nextTheme = elements.html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-  });
-}
-
-function setTheme(theme) {
-  elements.html.setAttribute('data-bs-theme', theme);
-  localStorage.setItem('soniox_theme', theme);
-
-  if (elements.themeIcon) {
-    if (theme === 'dark') {
-      elements.themeIcon.className = 'bi bi-moon-stars-fill text-warning';
-    } else {
-      elements.themeIcon.className = 'bi bi-sun-fill text-warning';
-    }
-  }
-}
-
-// --- Load and Save Settings ---
+// --- Settings Management ---
 function loadStoredSettings() {
-  const saved = localStorage.getItem('soniox_app_settings');
+  const saved = localStorage.getItem('soniox_translator_settings');
   if (saved) {
     try {
       appSettings = { ...appSettings, ...JSON.parse(saved) };
     } catch (e) {}
   }
 
-  // Populate inputs
-  if (elements.apiKeyInput) {
-    elements.apiKeyInput.value = soniox.getApiKey();
-  }
+  if (elements.apiKeyInput) elements.apiKeyInput.value = soniox.getApiKey();
   if (elements.modelSelect) elements.modelSelect.value = appSettings.model;
   if (elements.settingDiarization) elements.settingDiarization.checked = appSettings.enableSpeakerDiarization;
-  if (elements.translateDiarizationToggle) elements.translateDiarizationToggle.checked = appSettings.enableSpeakerDiarization;
   if (elements.settingLangId) elements.settingLangId.checked = appSettings.enableLanguageIdentification;
   if (elements.settingEndpoint) elements.settingEndpoint.checked = appSettings.enableEndpointDetection;
   if (elements.settingEcho) elements.settingEcho.checked = appSettings.echoCancellation;
@@ -162,9 +168,9 @@ function loadStoredSettings() {
   if (elements.settingGain) elements.settingGain.checked = appSettings.autoGainControl;
   if (elements.settingLangHints) elements.settingLangHints.value = (appSettings.languageHints || []).join(', ');
   if (elements.settingCustomTerms) elements.settingCustomTerms.value = appSettings.customTerms || '';
-  if (elements.targetLanguageSelect) elements.targetLanguageSelect.value = appSettings.targetLanguage || 'es';
-  if (elements.languageASelect) elements.languageASelect.value = appSettings.languageA || 'en';
-  if (elements.languageBSelect) elements.languageBSelect.value = appSettings.languageB || 'es';
+
+  if (elements.selectSourceLang) elements.selectSourceLang.value = appSettings.sourceLanguage || 'any';
+  if (elements.selectTargetLang) elements.selectTargetLang.value = appSettings.targetLanguage || 'en';
 }
 
 function saveCurrentSettings() {
@@ -179,25 +185,24 @@ function saveCurrentSettings() {
 
   const hintsVal = elements.settingLangHints?.value || '';
   appSettings.languageHints = hintsVal.split(',').map(s => s.trim()).filter(Boolean);
-
   appSettings.customTerms = elements.settingCustomTerms?.value || '';
-  appSettings.targetLanguage = elements.targetLanguageSelect?.value || 'es';
-  appSettings.languageA = elements.languageASelect?.value || 'en';
-  appSettings.languageB = elements.languageBSelect?.value || 'es';
 
-  localStorage.setItem('soniox_app_settings', JSON.stringify(appSettings));
+  localStorage.setItem('soniox_translator_settings', JSON.stringify(appSettings));
 }
 
-function checkApiKeyNotice() {
-  const hasKey = !!soniox.getApiKey();
-  if (!hasKey) {
-    elements.apiKeyWarningBanner?.classList.remove('d-none');
-  } else {
-    elements.apiKeyWarningBanner?.classList.add('d-none');
-  }
+function updateLanguageUI() {
+  const srcName = LANGUAGE_NAMES[appSettings.sourceLanguage] || 'Any';
+  const trgName = LANGUAGE_NAMES[appSettings.targetLanguage] || 'English';
+
+  if (elements.sourceLangLabel) elements.sourceLangLabel.textContent = srcName;
+  if (elements.targetLangLabel) elements.targetLangLabel.textContent = trgName;
+
+  if (elements.transPaneTitle) elements.transPaneTitle.textContent = `${trgName.toUpperCase()} TRANSLATION`;
+  if (elements.menuCopyTransLabel) elements.menuCopyTransLabel.textContent = `Copy ${trgName}`;
+  if (elements.transPlaceholderText) elements.transPlaceholderText.textContent = `Conversation in ${trgName} will appear here...`;
 }
 
-// --- Audio Device Enumeration ---
+// --- Audio Devices ---
 async function enumerateAudioDevices() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
   try {
@@ -217,338 +222,55 @@ async function enumerateAudioDevices() {
       });
     }
   } catch (err) {
-    console.warn('[Audio] Failed to enumerate devices:', err);
+    console.warn('[Audio] Device enumeration failed:', err);
   }
 }
 
-// --- Event Listeners Setup ---
-function setupEventListeners() {
-  // Mode selection buttons
-  elements.modeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.getAttribute('data-mode');
-      switchMode(mode);
-    });
-  });
+// --- Recording State Machine ---
+function setRecordingState(newState) {
+  recordingState = newState;
 
-  // Start / Stop Recording
-  elements.recordBtn?.addEventListener('click', () => {
-    toggleRecording();
-  });
+  if (newState === 'idle') {
+    elements.controlsIdle?.classList.remove('d-none');
+    elements.controlsRecording?.classList.add('d-none');
+    elements.controlsPaused?.classList.add('d-none');
 
-  // Finalize button
-  elements.finalizeBtn?.addEventListener('click', () => {
-    soniox.finalize();
-    ui.showToast('Finalizing current speech segment...', 'info');
-  });
+    elements.languageSelectorBar?.classList.remove('d-none');
+    elements.bottomTabBar?.classList.remove('d-none');
 
-  // Cancel button
-  elements.cancelBtn?.addEventListener('click', () => {
-    soniox.cancel();
-    ui.showToast('Session cancelled', 'warning');
-  });
+    ui.updateTimerDisplay(elements.timerIdle);
+  } else if (newState === 'recording') {
+    elements.controlsIdle?.classList.add('d-none');
+    elements.controlsRecording?.classList.remove('d-none');
+    elements.controlsPaused?.classList.add('d-none');
 
-  // Clear button
-  elements.clearBtn?.addEventListener('click', () => {
-    clearCurrentTranscript();
-  });
+    // Hide language selector & bottom nav to maximize focus (Screenshot 3)
+    elements.languageSelectorBar?.classList.add('d-none');
+    elements.bottomTabBar?.classList.add('d-none');
 
-  // Font size
-  elements.fontSizeIncreaseBtn?.addEventListener('click', () => ui.changeFontSize(2));
-  elements.fontSizeDecreaseBtn?.addEventListener('click', () => ui.changeFontSize(-2));
+    ui.startTimer(elements.timerRunning);
+  } else if (newState === 'paused') {
+    elements.controlsIdle?.classList.add('d-none');
+    elements.controlsRecording?.classList.add('d-none');
+    elements.controlsPaused?.classList.remove('d-none');
 
-  // Scroll to bottom floating button
-  elements.scrollToBottomBtn?.addEventListener('click', () => {
-    const activeContainer = getActiveScrollContainer();
-    ui.scrollToBottom(activeContainer);
-    elements.scrollToBottomBtn?.classList.add('d-none');
-  });
+    // Show language selector & bottom nav when paused (Screenshot 1)
+    elements.languageSelectorBar?.classList.remove('d-none');
+    elements.bottomTabBar?.classList.remove('d-none');
 
-  // API Key Save
-  elements.saveApiKeyBtn?.addEventListener('click', () => {
-    const key = elements.apiKeyInput?.value || '';
-    soniox.setApiKey(key);
-    saveCurrentSettings();
-    checkApiKeyNotice();
-    ui.showToast('API Key and Settings saved!', 'success');
-    if (settingsModal) {
-      settingsModal.hide();
-    }
-  });
-
-  // Toggle API key visibility
-  elements.toggleApiKeyVisibility?.addEventListener('click', () => {
-    if (!elements.apiKeyInput) return;
-    const isPassword = elements.apiKeyInput.type === 'password';
-    elements.apiKeyInput.type = isPassword ? 'text' : 'password';
-    elements.toggleApiKeyVisibility.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-  });
-
-  // Open settings banner button
-  elements.openSettingsBannerBtn?.addEventListener('click', () => {
-    if (settingsModal) settingsModal.show();
-  });
-
-  // Target Language dropdown change
-  elements.targetLanguageSelect?.addEventListener('change', () => {
-    saveCurrentSettings();
-    if (soniox.isActive()) {
-      ui.showToast('Restart recording to apply new language target', 'info');
-    }
-  });
-
-  // Diarization toggle in translation header
-  elements.translateDiarizationToggle?.addEventListener('change', (e) => {
-    appSettings.enableSpeakerDiarization = e.target.checked;
-    if (elements.settingDiarization) elements.settingDiarization.checked = e.target.checked;
-    saveCurrentSettings();
-    renderCurrentView();
-    ui.showToast(e.target.checked ? 'Speaker Diarization enabled for translation' : 'Speaker Diarization hidden in translation', 'info');
-  });
-
-  // Keep modal toggle synced too
-  elements.settingDiarization?.addEventListener('change', (e) => {
-    if (elements.translateDiarizationToggle) elements.translateDiarizationToggle.checked = e.target.checked;
-  });
-
-  // Copy Buttons
-  setupCopyButtons();
-
-  // Export Buttons
-  setupExportButtons();
-
-  // Keyboard shortcuts
-  window.addEventListener('keydown', (e) => {
-    // Avoid triggering if user is focused inside an input or textarea
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
-      return;
-    }
-
-    if (e.code === 'Space' && !e.repeat) {
-      e.preventDefault();
-      toggleRecording();
-    } else if (e.key === 'Escape') {
-      if (soniox.isActive()) {
-        e.preventDefault();
-        soniox.cancel();
-      }
-    }
-  });
-}
-
-function formatTokensWithSpeakers(tokens, isDiarized) {
-  if (!isDiarized) return tokens.map(t => t.text).join('');
-  let output = '';
-  let currentSpeaker = null;
-  for (const t of tokens) {
-    if (t.speaker != null && t.speaker !== currentSpeaker) {
-      currentSpeaker = t.speaker;
-      output += `\n\n[Speaker ${currentSpeaker}]: `;
-    }
-    output += t.text;
-  }
-  return output.trim();
-}
-
-function setupCopyButtons() {
-  document.getElementById('copyTranscribeBtn')?.addEventListener('click', (e) => {
-    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
-    const text = formatTokensWithSpeakers(all, appSettings.enableSpeakerDiarization);
-    ui.copyToClipboard(text, e.currentTarget);
-  });
-
-  document.getElementById('copyOrigTranslateBtn')?.addEventListener('click', (e) => {
-    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
-    const origTokens = all.filter(t => t.translation_status !== 'translation');
-    const text = formatTokensWithSpeakers(origTokens, appSettings.enableSpeakerDiarization);
-    ui.copyToClipboard(text, e.currentTarget);
-  });
-
-  document.getElementById('copyTargetTranslateBtn')?.addEventListener('click', (e) => {
-    let activeSpeaker = '1';
-    const processed = [...soniox.finalTokens, ...soniox.nonFinalTokens].map(t => {
-      const clone = { ...t };
-      if (clone.speaker != null) activeSpeaker = clone.speaker;
-      else if (clone.translation_status === 'translation') clone.speaker = activeSpeaker;
-      return clone;
-    });
-    const transTokens = processed.filter(t => t.translation_status === 'translation');
-    const text = formatTokensWithSpeakers(transTokens, appSettings.enableSpeakerDiarization);
-    ui.copyToClipboard(text, e.currentTarget);
-  });
-
-  document.getElementById('copyDialogueBtn')?.addEventListener('click', (e) => {
-    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
-    const text = all.map(t => `[${t.language || '?'}] ${t.text}`).join('\n');
-    ui.copyToClipboard(text, e.currentTarget);
-  });
-}
-
-function setupExportButtons() {
-  const getTokens = () => [...soniox.finalTokens, ...soniox.nonFinalTokens];
-
-  document.getElementById('exportTxtBtn')?.addEventListener('click', () => {
-    ui.exportToTxt(getTokens(), `soniox-${currentMode}-${Date.now()}.txt`);
-  });
-
-  document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
-    ui.exportToJson(getTokens(), `soniox-${currentMode}-${Date.now()}.json`);
-  });
-
-  document.getElementById('exportSrtBtn')?.addEventListener('click', () => {
-    ui.exportToSrt(getTokens(), `soniox-${currentMode}-${Date.now()}.srt`);
-  });
-}
-
-// --- Mode Switching ---
-function switchMode(mode) {
-  if (currentMode === mode) return;
-
-  if (soniox.isActive()) {
-    soniox.stop();
-  }
-
-  currentMode = mode;
-
-  // Update tabs style
-  elements.modeButtons.forEach(btn => {
-    if (btn.getAttribute('data-mode') === mode) {
-      btn.classList.add('active', 'btn-primary');
-      btn.classList.remove('btn-outline-primary', 'btn-light');
-    } else {
-      btn.classList.remove('active', 'btn-primary');
-      btn.classList.add('btn-outline-primary');
-    }
-  });
-
-  // Switch view containers
-  elements.viewTranscribe?.classList.toggle('d-none', mode !== 'transcribe');
-  elements.viewTranslateTo?.classList.toggle('d-none', mode !== 'translate-to');
-  elements.viewTranslateBetween?.classList.toggle('d-none', mode !== 'translate-between');
-
-  renderCurrentView();
-}
-
-function getActiveScrollContainer() {
-  if (currentMode === 'transcribe') return elements.transcribeContainer;
-  if (currentMode === 'translate-to') return elements.targetTranslateContainer;
-  return elements.dialogueContainer;
-}
-
-// --- Soniox Callbacks & Rendering ---
-function setupSonioxCallbacks() {
-  soniox.on('stateChange', ({ newState }) => {
-    updateStateUI(newState);
-  });
-
-  soniox.on('started', () => {
-    updateStateUI('Running');
-    ui.startTimer(elements.timerDisplay);
-    ui.startAudioVisualizer(elements.canvas, soniox);
-    ui.showToast('Microphone live. Listening...', 'success');
-  });
-
-  soniox.on('partialResult', () => {
-    renderCurrentView();
-  });
-
-  soniox.on('finished', () => {
-    updateStateUI('Finished');
-    ui.stopTimer();
-    ui.stopAudioVisualizer(elements.canvas);
-    ui.showToast('Transcription finished.', 'info');
-  });
-
-  soniox.on('error', ({ status, message }) => {
-    updateStateUI('Error');
-    ui.stopTimer();
-    ui.stopAudioVisualizer(elements.canvas);
-
-    if (status === 'api_key_missing') {
-      if (settingsModal) settingsModal.show();
-    }
-    ui.showToast(`Error: ${message || status}`, 'danger');
-  });
-}
-
-function updateStateUI(state) {
-  const isActive = soniox.isActive();
-
-  // Status Badge Pill
-  if (elements.statusDot && elements.statusText) {
-    if (state === 'Running') {
-      elements.statusDot.className = 'status-dot pulse-active bg-danger';
-      elements.statusText.textContent = 'Recording';
-      elements.statusBadge.className = 'badge rounded-pill border border-danger-subtle bg-danger-subtle text-danger px-3 py-2';
-    } else if (state === 'OpeningWebSocket' || state === 'RequestingMedia') {
-      elements.statusDot.className = 'status-dot pulse-active bg-warning';
-      elements.statusText.textContent = 'Connecting...';
-      elements.statusBadge.className = 'badge rounded-pill border border-warning-subtle bg-warning-subtle text-warning-emphasis px-3 py-2';
-    } else if (state === 'FinishingProcessing') {
-      elements.statusDot.className = 'status-dot pulse-active bg-info';
-      elements.statusText.textContent = 'Finalizing...';
-      elements.statusBadge.className = 'badge rounded-pill border border-info-subtle bg-info-subtle text-info-emphasis px-3 py-2';
-    } else if (state === 'Error') {
-      elements.statusDot.className = 'status-dot bg-danger';
-      elements.statusText.textContent = 'Error';
-      elements.statusBadge.className = 'badge rounded-pill border border-danger-subtle bg-danger-subtle text-danger px-3 py-2';
-    } else {
-      elements.statusDot.className = 'status-dot bg-secondary';
-      elements.statusText.textContent = 'Idle';
-      elements.statusBadge.className = 'badge rounded-pill border bg-body-tertiary text-secondary px-3 py-2';
-    }
-  }
-
-  // Record Button
-  if (elements.recordBtn && elements.recordBtnIcon && elements.recordBtnText) {
-    if (isActive) {
-      elements.recordBtn.className = 'btn btn-danger btn-lg rounded-pill shadow-lg px-4 record-btn-pulse';
-      elements.recordBtnIcon.className = 'bi bi-stop-circle-fill me-2 fs-5';
-      elements.recordBtnText.textContent = 'Stop Recording';
-      elements.finalizeBtn?.removeAttribute('disabled');
-      elements.cancelBtn?.removeAttribute('disabled');
-    } else {
-      elements.recordBtn.className = 'btn btn-primary btn-lg rounded-pill shadow-lg px-4 record-btn-glow';
-      elements.recordBtnIcon.className = 'bi bi-mic-fill me-2 fs-5';
-      elements.recordBtnText.textContent = 'Start Listening';
-      elements.finalizeBtn?.setAttribute('disabled', 'true');
-      elements.cancelBtn?.setAttribute('disabled', 'true');
-    }
+    ui.pauseTimer();
+    ui.updateTimerDisplay(elements.timerPaused);
   }
 }
 
-function renderCurrentView() {
-  const finalTokens = soniox.finalTokens;
-  const nonFinalTokens = soniox.nonFinalTokens;
-  const allTokens = [...finalTokens, ...nonFinalTokens];
-
-  if (currentMode === 'transcribe') {
-    ui.renderTranscription(elements.transcribeContainer, finalTokens, nonFinalTokens, {
-      enableSpeakerDiarization: appSettings.enableSpeakerDiarization
-    });
-  } else if (currentMode === 'translate-to') {
-    ui.renderTranslationPanes(elements.origTranslateContainer, elements.targetTranslateContainer, allTokens, {
-      enableSpeakerDiarization: appSettings.enableSpeakerDiarization
-    });
-  } else if (currentMode === 'translate-between') {
-    ui.renderTwoWayDialogue(elements.dialogueContainer, allTokens, appSettings.languageA, appSettings.languageB);
-  }
-}
-
-// --- Toggle Recording ---
-async function toggleRecording() {
-  if (soniox.isActive()) {
-    soniox.stop();
-    return;
-  }
-
+// --- Start, Pause, Resume, Discard, Done ---
+async function startTranslation(isResume = false) {
   if (!soniox.getApiKey()) {
     ui.showToast('Please enter your Soniox API Key in Settings first.', 'warning');
-    if (settingsModal) settingsModal.show();
+    if (modals.settings) modals.settings.show();
     return;
   }
 
-  // Build configuration based on active mode
   const config = {
     model: appSettings.model,
     enableSpeakerDiarization: appSettings.enableSpeakerDiarization,
@@ -558,13 +280,24 @@ async function toggleRecording() {
     noiseSuppression: appSettings.noiseSuppression,
     autoGainControl: appSettings.autoGainControl,
     deviceId: appSettings.deviceId || undefined,
+    append: isResume,
+    translation: {
+      type: 'one_way',
+      target_language: appSettings.targetLanguage || 'en'
+    }
   };
 
-  if (appSettings.languageHints && appSettings.languageHints.length > 0) {
-    config.languageHints = appSettings.languageHints;
+  // Add source language hints if specified
+  const hints = [...(appSettings.languageHints || [])];
+  if (appSettings.sourceLanguage && appSettings.sourceLanguage !== 'any') {
+    if (!hints.includes(appSettings.sourceLanguage)) {
+      hints.unshift(appSettings.sourceLanguage);
+    }
+  }
+  if (hints.length > 0) {
+    config.languageHints = hints;
   }
 
-  // Parse custom terms
   if (appSettings.customTerms && appSettings.customTerms.trim()) {
     const terms = appSettings.customTerms.split(',').map(s => s.trim()).filter(Boolean);
     if (terms.length > 0) {
@@ -572,34 +305,348 @@ async function toggleRecording() {
     }
   }
 
-  // Set translation configuration based on currentMode
-  if (currentMode === 'translate-to') {
-    config.translation = {
-      type: 'one_way',
-      target_language: elements.targetLanguageSelect?.value || appSettings.targetLanguage || 'es'
-    };
-  } else if (currentMode === 'translate-between') {
-    const langA = elements.languageASelect?.value || appSettings.languageA || 'en';
-    const langB = elements.languageBSelect?.value || appSettings.languageB || 'es';
-    config.translation = {
-      type: 'two_way',
-      language_a: langA,
-      language_b: langB
-    };
-  }
-
   try {
-    ui.resetTimer(elements.timerDisplay);
+    if (!isResume) {
+      ui.resetTimer(elements.timerRunning);
+    }
+    setRecordingState('recording');
     await soniox.startTranscription(config);
   } catch (err) {
-    console.error('Failed to start Soniox transcription:', err);
+    console.error('Failed to start transcription:', err);
+    setRecordingState('idle');
   }
 }
 
-function clearCurrentTranscript() {
+function pauseTranslation() {
+  if (soniox.isActive()) {
+    soniox.stop();
+  }
+  setRecordingState('paused');
+  ui.showToast('Recording paused', 'info');
+}
+
+function resumeTranslation() {
+  startTranslation(true);
+}
+
+function discardTranslation() {
+  if (soniox.isActive()) {
+    soniox.cancel();
+  }
   soniox.clearTokens();
-  renderCurrentView();
-  ui.resetTimer(elements.timerDisplay);
-  ui.updateStats(0, 0);
-  ui.showToast('Transcript cleared', 'info');
+  ui.resetTimer(elements.timerIdle);
+  renderPanes();
+  setRecordingState('idle');
+  ui.showToast('Session discarded', 'info');
+}
+
+function doneTranslation() {
+  if (soniox.isActive()) {
+    soniox.finalize();
+  }
+  saveSessionToHistory();
+  ui.resetTimer(elements.timerIdle);
+  setRecordingState('idle');
+  ui.showToast('Translation completed & saved to History!', 'success');
+}
+
+// --- History Persistence ---
+function saveCurrentRecordingToHistory() {
+  const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+  const origTokens = all.filter(t => t.translation_status !== 'translation');
+  const transTokens = all.filter(t => t.translation_status === 'translation');
+
+  const origText = origTokens.map(t => t.text).join('').trim();
+  const transText = transTokens.map(t => t.text).join('').trim();
+
+  if (!origText && !transText) {
+    ui.showToast('No recording to save yet. Record some speech first.', 'warning');
+    return;
+  }
+
+  const session = {
+    id: Date.now(),
+    date: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    sourceLang: LANGUAGE_NAMES[appSettings.sourceLanguage] || 'Any',
+    targetLang: LANGUAGE_NAMES[appSettings.targetLanguage] || 'English',
+    origText,
+    transText
+  };
+
+  try {
+    const history = JSON.parse(localStorage.getItem('soniox_history') || '[]');
+    if (history.length > 0 && history[0].origText === origText && history[0].transText === transText) {
+      ui.showToast('Already saved to History!', 'info');
+      return;
+    }
+    history.unshift(session);
+    localStorage.setItem('soniox_history', JSON.stringify(history.slice(0, 50)));
+
+    // Button feedback
+    if (elements.btnSaveToHistory) {
+      const originalHtml = elements.btnSaveToHistory.innerHTML;
+      elements.btnSaveToHistory.innerHTML = '<i class="bi bi-check-lg text-white"></i>';
+      setTimeout(() => {
+        elements.btnSaveToHistory.innerHTML = originalHtml;
+      }, 1500);
+    }
+
+    ui.showToast('Recording saved to History!', 'success');
+  } catch (e) {
+    console.warn('Failed to save session to history:', e);
+    ui.showToast('Failed to save to history', 'danger');
+  }
+}
+
+function saveSessionToHistory() {
+  const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+  if (all.length === 0) return;
+
+  const origTokens = all.filter(t => t.translation_status !== 'translation');
+  const transTokens = all.filter(t => t.translation_status === 'translation');
+
+  const origText = origTokens.map(t => t.text).join('').trim();
+  const transText = transTokens.map(t => t.text).join('').trim();
+
+  if (!origText && !transText) return;
+
+  const session = {
+    id: Date.now(),
+    date: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    sourceLang: LANGUAGE_NAMES[appSettings.sourceLanguage] || 'Any',
+    targetLang: LANGUAGE_NAMES[appSettings.targetLanguage] || 'English',
+    origText,
+    transText
+  };
+
+  try {
+    const history = JSON.parse(localStorage.getItem('soniox_history') || '[]');
+    history.unshift(session);
+    // Keep last 30 sessions
+    localStorage.setItem('soniox_history', JSON.stringify(history.slice(0, 30)));
+  } catch (e) {
+    console.warn('Failed to save session to history:', e);
+  }
+}
+
+function renderHistoryList() {
+  if (!elements.historyListContainer) return;
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem('soniox_history') || '[]');
+  } catch (e) {}
+
+  if (history.length === 0) {
+    elements.historyListContainer.innerHTML = `
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-clock display-4 d-block mb-3 opacity-50"></i>
+        <h6 class="fw-semibold">No saved conversations yet</h6>
+        <p class="small mb-0">Completed recordings and translations will appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '<div class="d-flex flex-column gap-3">';
+  history.forEach(item => {
+    html += `
+      <div class="card p-3 rounded-3 border bg-body-tertiary">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 small">
+            ${ui.escapeHtml(item.sourceLang)} ➔ ${ui.escapeHtml(item.targetLang)}
+          </span>
+          <span class="text-muted small">${ui.escapeHtml(item.date)}</span>
+        </div>
+        <div class="small mb-2">
+          <strong class="d-block text-muted" style="font-size: 11px;">ORIGINAL</strong>
+          <span>${ui.escapeHtml(item.origText || '(No speech)')}</span>
+        </div>
+        <div class="small">
+          <strong class="d-block text-primary" style="font-size: 11px;">TRANSLATION</strong>
+          <span class="fw-medium">${ui.escapeHtml(item.transText || '(No translation)')}</span>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  elements.historyListContainer.innerHTML = html;
+}
+
+// --- Rendering Panes ---
+function renderPanes() {
+  const allTokens = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+  const trgName = LANGUAGE_NAMES[appSettings.targetLanguage] || 'English';
+
+  ui.renderTranslationPanes(
+    elements.origTranslateContainer,
+    elements.targetTranslateContainer,
+    allTokens,
+    {
+      enableSpeakerDiarization: appSettings.enableSpeakerDiarization,
+      targetLangName: trgName
+    }
+  );
+}
+
+// --- Soniox Callbacks ---
+function setupSonioxCallbacks() {
+  soniox.on('partialResult', () => {
+    renderPanes();
+  });
+
+  soniox.on('finished', () => {
+    if (recordingState === 'recording') {
+      setRecordingState('paused');
+    }
+  });
+
+  soniox.on('error', ({ status, message }) => {
+    if (status === 'api_key_missing') {
+      if (modals.settings) modals.settings.show();
+    }
+    ui.showToast(`Error: ${message || status}`, 'danger');
+    setRecordingState('idle');
+  });
+}
+
+// --- Event Listeners ---
+function setupEventListeners() {
+  // Action Buttons
+  elements.btnStartListening?.addEventListener('click', () => startTranslation(false));
+  elements.btnPauseRecording?.addEventListener('click', () => pauseTranslation());
+  elements.btnResumeRecording?.addEventListener('click', () => resumeTranslation());
+  elements.btnDiscardRecording?.addEventListener('click', () => discardTranslation());
+  elements.btnDoneRecording?.addEventListener('click', () => doneTranslation());
+
+  // Settings Modal Triggers
+  elements.btnOpenSettings?.addEventListener('click', () => {
+    if (modals.settings) modals.settings.show();
+  });
+
+  // Language Pill Triggers
+  elements.sourceLangPill?.addEventListener('click', () => {
+    if (modals.language) modals.language.show();
+  });
+  elements.targetLangPill?.addEventListener('click', () => {
+    if (modals.language) modals.language.show();
+  });
+
+  // Language Modal Apply
+  elements.applyLanguageBtn?.addEventListener('click', () => {
+    appSettings.sourceLanguage = elements.selectSourceLang?.value || 'any';
+    appSettings.targetLanguage = elements.selectTargetLang?.value || 'en';
+    saveCurrentSettings();
+    updateLanguageUI();
+    renderPanes();
+    ui.showToast(`Target set to ${LANGUAGE_NAMES[appSettings.targetLanguage]}`, 'success');
+  });
+
+  // Save to History Button Trigger
+  elements.btnSaveToHistory?.addEventListener('click', () => {
+    saveCurrentRecordingToHistory();
+  });
+
+  const getTokens = () => [...soniox.finalTokens, ...soniox.nonFinalTokens];
+
+  elements.exportTxtBtn?.addEventListener('click', () => {
+    ui.exportToTxt(getTokens(), `soniox-translation-${Date.now()}.txt`);
+    if (modals.export) modals.export.hide();
+  });
+  elements.exportSrtBtn?.addEventListener('click', () => {
+    ui.exportToSrt(getTokens(), `soniox-translation-${Date.now()}.srt`);
+    if (modals.export) modals.export.hide();
+  });
+  elements.exportJsonBtn?.addEventListener('click', () => {
+    ui.exportToJson(getTokens(), `soniox-translation-${Date.now()}.json`);
+    if (modals.export) modals.export.hide();
+  });
+
+  // Bottom Tabs
+  elements.tabHistory?.addEventListener('click', () => {
+    renderHistoryList();
+    if (modals.history) modals.history.show();
+  });
+  elements.clearHistoryBtn?.addEventListener('click', () => {
+    localStorage.removeItem('soniox_history');
+    renderHistoryList();
+    ui.showToast('History cleared', 'info');
+  });
+  elements.tabTranslator?.addEventListener('click', () => {
+    // Already in Translator
+  });
+
+  // Options Menu Popover (Screenshot 1)
+  elements.paneOptionsBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    elements.paneOptionsMenu?.classList.toggle('d-none');
+  });
+
+  // Close options menu when tapping outside
+  document.addEventListener('click', (e) => {
+    if (!elements.paneOptionsMenu?.classList.contains('d-none') && !elements.paneOptionsBtn?.contains(e.target)) {
+      elements.paneOptionsMenu?.classList.add('d-none');
+    }
+  });
+
+  elements.menuRotateBtn?.addEventListener('click', () => {
+    ui.toggleRotateTranscription(elements.origTranslateContainer);
+    elements.paneOptionsMenu?.classList.add('d-none');
+  });
+
+  elements.menuCopyOrigBtn?.addEventListener('click', () => {
+    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+    const origTokens = all.filter(t => t.translation_status !== 'translation');
+    const text = origTokens.map(t => t.text).join('');
+    ui.copyToClipboard(text, 'Original text copied!');
+    elements.paneOptionsMenu?.classList.add('d-none');
+  });
+
+  elements.menuCopyTransBtn?.addEventListener('click', () => {
+    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+    const transTokens = all.filter(t => t.translation_status === 'translation');
+    const text = transTokens.map(t => t.text).join('');
+    const trgName = LANGUAGE_NAMES[appSettings.targetLanguage] || 'English';
+    ui.copyToClipboard(text, `${trgName} translation copied!`);
+    elements.paneOptionsMenu?.classList.add('d-none');
+  });
+
+  elements.menuTextSizeBtn?.addEventListener('click', () => {
+    ui.cycleFontSize();
+    elements.paneOptionsMenu?.classList.add('d-none');
+  });
+
+  // Save Settings Modal
+  elements.saveApiKeyBtn?.addEventListener('click', () => {
+    const key = elements.apiKeyInput?.value || '';
+    soniox.setApiKey(key);
+    saveCurrentSettings();
+    ui.showToast('Settings saved!', 'success');
+    if (modals.settings) modals.settings.hide();
+  });
+
+  elements.toggleApiKeyVisibility?.addEventListener('click', () => {
+    if (!elements.apiKeyInput) return;
+    const isPw = elements.apiKeyInput.type === 'password';
+    elements.apiKeyInput.type = isPw ? 'text' : 'password';
+    elements.toggleApiKeyVisibility.innerHTML = isPw ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+  });
+
+  // Keyboard Shortcuts (Space to toggle, Escape to cancel)
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+    if (e.code === 'Space' && !e.repeat) {
+      e.preventDefault();
+      if (recordingState === 'idle') startTranslation(false);
+      else if (recordingState === 'recording') pauseTranslation();
+      else if (recordingState === 'paused') resumeTranslation();
+    } else if (e.key === 'Escape') {
+      if (recordingState === 'recording' || recordingState === 'paused') {
+        e.preventDefault();
+        discardTranslation();
+      }
+    }
+  });
 }

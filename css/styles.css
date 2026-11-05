@@ -1,259 +1,731 @@
 /**
- * Soniox Speech-to-Text PWA Stylesheet
- * Responsive across Mobile Phones, iPad/Tablets, and Desktop PC Browsers
+ * Soniox Translator PWA Stylesheet
+ * Liquid Glassmorphism & Square Gem-Like Controls
+ * Calming Green Landscape Theme
  */
 
 :root {
-  --app-primary: #6366f1;
-  --app-primary-rgb: 99, 102, 241;
-  --app-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
-  --app-bg-dark: #090d16;
-  --app-card-dark: #111827;
-  --app-border-dark: rgba(255, 255, 255, 0.08);
-  --app-bg-light: #f8fafc;
-  --app-card-light: #ffffff;
-  --app-border-light: rgba(0, 0, 0, 0.08);
+  /* Gemstone Emerald Palette */
+  --gem-emerald-light: #6ee7b7;
+  --gem-emerald-1: #34d399;
+  --gem-emerald-2: #10b981;
+  --gem-emerald-3: #059669;
+  --gem-emerald-4: #047857;
+  --gem-emerald-dark: #064e3b;
+  --gem-emerald-glow: rgba(16, 185, 129, 0.45);
+  
+  /* Gemstone Ruby Palette */
+  --gem-ruby-light: #fca5a5;
+  --gem-ruby-1: #f87171;
+  --gem-ruby-2: #ef4444;
+  --gem-ruby-3: #dc2626;
+  --gem-ruby-4: #b91c1c;
+  --gem-ruby-dark: #7f1d1d;
+  --gem-ruby-glow: rgba(239, 68, 68, 0.45);
+
+  /* Liquid Glass Values */
+  --liquid-glass-bg: rgba(255, 255, 255, 0.72);
+  --liquid-glass-border: rgba(255, 255, 255, 0.8);
+  --liquid-glass-blur: blur(26px) saturate(190%);
+  --liquid-glass-shadow: 0 12px 36px rgba(10, 35, 22, 0.22);
+  
+  /* Text & Accents */
+  --text-dark: #112217;
+  --text-muted: #52796f;
+  --border-light: rgba(255, 255, 255, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.4);
 }
 
-/* Global resets & safe areas for mobile notches/home indicators */
+/* Global Resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   height: 100%;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+  background-color: #1b4332;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  user-select: auto;
+  user-select: none;
 }
 
-[data-bs-theme="dark"] body {
-  background-color: var(--app-bg-dark);
-  color: #e2e8f0;
-}
-
-[data-bs-theme="light"] body {
-  background-color: var(--app-bg-light);
-  color: #1e293b;
-}
-
-/* App Wrapper */
-.app-container {
+/* App Mobile Frame */
+.mobile-app-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background-color: #1b4332;
 }
 
-/* Navbar / App Header */
-.app-navbar {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--bs-border-color-translucent);
-  position: sticky;
+/* Serene Calming Green Landscape Backdrop */
+.landscape-backdrop {
+  position: absolute;
   top: 0;
-  z-index: 1020;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../images/calming-green-landscape.jpg');
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.brand-gradient-text {
-  background: var(--app-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.landscape-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg, 
+    rgba(20, 45, 32, 0.35) 0%, 
+    rgba(12, 32, 22, 0.12) 40%, 
+    rgba(10, 28, 18, 0.45) 100%
+  );
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+}
+
+/* Translation Sheet Card (Liquid Glass with Water-Droplet Refraction) */
+.translation-sheet.liquid-glass {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  margin: max(14px, env(safe-area-inset-top)) 14px 0 14px;
+  border-radius: 24px;
+  background: var(--liquid-glass-bg);
+  backdrop-filter: var(--liquid-glass-blur);
+  -webkit-backdrop-filter: var(--liquid-glass-blur);
+  border: 1px solid var(--liquid-glass-border);
+  box-shadow: 
+    var(--liquid-glass-shadow), 
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Individual Sheet Panes */
+.sheet-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.pane-title {
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
-/* Status indicator dot */
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.pane-icon-btn.gem-icon-btn {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--gem-emerald-3);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.pane-icon-btn.gem-icon-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Floating Options Popover Menu (Liquid Glass) */
+.options-popover-menu.liquid-glass-popover {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  width: 180px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  box-shadow: 
+    0 12px 35px rgba(10, 35, 22, 0.22), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  padding: 6px 0;
+  z-index: 500;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.options-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.options-menu-item:hover, .options-menu-item:active {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+.gem-menu-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  color: var(--gem-emerald-3) !important;
+}
+
+/* Pane Content & Scroll */
+.pane-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scroll-behavior: smooth;
+  user-select: text;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pane-content::-webkit-scrollbar {
+  width: 4px;
+}
+.pane-content::-webkit-scrollbar-thumb {
+  background: rgba(82, 121, 111, 0.4);
+  border-radius: 4px;
+}
+
+.empty-state-text {
+  color: var(--text-muted);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding-top: 4px;
+  opacity: 0.9;
+}
+
+.pane-text-body {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-dark);
+  word-break: break-word;
+}
+
+.final-words {
+  color: var(--text-dark);
+}
+
+.interim-words {
+  color: var(--gem-emerald-3);
+  opacity: 0.9;
+  font-style: italic;
+  margin-left: 2px;
+}
+
+/* Rotate Text Transformation for Upper Pane */
+.pane-rotated {
+  transform: rotate(180deg);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Speaker Diarization Badges (Subtle pill styling) */
+.speaker-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border-radius: 9999px !important;
+  padding: 3px 12px;
   display: inline-block;
 }
 
-.pulse-active {
-  animation: pulse-dot 1.5s infinite;
+.speaker-badge-green {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.28) !important;
 }
 
-@keyframes pulse-dot {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+.speaker-badge-blue {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(59, 130, 246, 0.28) !important;
 }
 
-/* Mode selector navigation buttons */
-.mode-nav-btn {
-  font-weight: 500;
-  border-radius: 9999px;
-  padding: 0.45rem 1rem;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+.speaker-badge-amber {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
 }
 
-/* Audio Visualizer Canvas */
-.visualizer-wrapper {
+.speaker-badge-purple {
+  background: rgba(168, 85, 247, 0.16) !important;
+  color: #7e22ce !important;
+  border: 1px solid rgba(168, 85, 247, 0.28) !important;
+}
+
+/* Middle Divider Line (Liquid Light) */
+.sheet-divider.liquid-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.9) 25%, 
+    rgba(255, 255, 255, 0.9) 75%, 
+    transparent
+  );
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Bottom Control Deck */
+.bottom-control-deck {
   position: relative;
-  width: 100%;
-  height: 48px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: rgba(var(--bs-primary-rgb), 0.04);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
-.visualizer-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
+/* Language Selector Bar (Faceted Crystal Tiles) */
+.language-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 20px 8px 20px;
 }
 
-/* Transcript Container & Cards */
-.transcript-card {
-  border-radius: 16px;
-  border: 1px solid var(--bs-border-color-translucent);
-  backdrop-filter: blur(8px);
-  transition: box-shadow 0.2s ease;
-}
-
-.transcript-scrollable {
-  min-height: 280px;
-  max-height: calc(100vh - 430px);
-  max-height: calc(100dvh - 430px);
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
-
-/* Custom scrollbars */
-.transcript-scrollable::-webkit-scrollbar {
-  width: 6px;
-}
-.transcript-scrollable::-webkit-scrollbar-track {
-  background: transparent;
-}
-.transcript-scrollable::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
-  border-radius: 3px;
-}
-
-/* Token text styling */
-.interim-text {
-  color: var(--app-primary) !important;
-  opacity: 0.85;
-  font-style: italic;
-  animation: interim-fade 0.3s ease-in;
-}
-
-@keyframes interim-fade {
-  from { opacity: 0.4; }
-  to { opacity: 0.85; }
-}
-
-.token-lang-pill {
-  font-size: 0.65rem;
-  margin-left: 2px;
-  vertical-align: super;
-  padding: 0.1em 0.3em;
-}
-
-/* Speaker card in Diarization view */
-.speaker-card {
-  transition: transform 0.15s ease;
-}
-
-.speaker-card:hover {
-  transform: translateY(-1px);
-}
-
-/* Floating Scroll-to-Bottom Button */
-.scroll-bottom-btn {
-  position: absolute;
-  bottom: 20px;
-  right: 25px;
-  z-index: 10;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  animation: bounce-subtle 2s infinite;
-}
-
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-/* Main Record Action Button */
-.record-btn-glow {
-  background: var(--app-gradient) !important;
-  border: none !important;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+.gem-tile-btn {
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px; /* Square gem-cut tile */
+  padding: 10px 24px;
+  min-width: 115px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gem-emerald-dark);
+  box-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.95),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 14px rgba(0, 30, 15, 0.14);
+  cursor: pointer;
+  text-align: center;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.record-btn-glow:hover {
-  transform: scale(1.03);
-  box-shadow: 0 6px 26px rgba(99, 102, 241, 0.6);
+.gem-tile-btn:active {
+  transform: scale(0.96);
+  box-shadow: 
+    inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 30, 15, 0.1);
 }
 
-.record-btn-pulse {
-  animation: pulse-button 1.8s infinite;
+.lang-arrow-icon {
+  color: #ffffff;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-@keyframes pulse-button {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-  70% { box-shadow: 0 0 0 16px rgba(220, 53, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+/* Floating Action Controls Container */
+.action-controls-container {
+  padding: 8px 20px 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Sticky Control Deck for Phones & Mobile */
-.control-deck {
-  position: sticky;
-  bottom: 0;
-  z-index: 1000;
-  background: var(--bs-body-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--bs-border-color-translucent);
-  padding-top: 0.75rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+/* --- GEMSTONE SQUARE BUTTONS --- */
+
+/* Base Square Gem Button */
+.gem-btn-square {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px; /* Square gem cut */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* Dialogue Chat Bubbles for Two-Way Mode */
-.dialogue-bubble {
-  word-break: break-word;
-  animation: pop-bubble 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* Quartz / Smoky Crystal Square Gem (Settings) */
+.gem-btn-quartz {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(235, 245, 240, 0.65) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--gem-emerald-dark);
+  box-shadow: 
+    inset 1.5px 1.5px 1px rgba(255, 255, 255, 0.95),
+    inset -1.5px -1.5px 2px rgba(0, 0, 0, 0.12),
+    0 6px 18px rgba(0, 25, 12, 0.16);
 }
 
-@keyframes pop-bubble {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+.gem-btn-quartz:active {
+  transform: scale(0.94);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive tweaks for Mobile, iPad, and PC */
+/* Emerald Gem Square (Save to History, Done) */
+.gem-btn-emerald-square {
+  background: linear-gradient(135deg, #34d399 0%, #059669 45%, #047857 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    inset 1.5px 1.5px 1px rgba(255, 255, 255, 0.85),
+    inset -1.5px -1.5px 2px rgba(4, 78, 59, 0.75),
+    0 6px 18px var(--gem-emerald-glow);
+}
+
+.gem-btn-emerald-square:active {
+  transform: scale(0.94);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.45),
+    0 2px 8px var(--gem-emerald-glow);
+}
+
+/* Ruby Gem Square (Discard) */
+.gem-btn-ruby-square {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 45%, #b91c1c 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    inset 1.5px 1.5px 1px rgba(255, 255, 255, 0.85),
+    inset -1.5px -1.5px 2px rgba(127, 29, 29, 0.75),
+    0 6px 18px var(--gem-ruby-glow);
+}
+
+.gem-btn-ruby-square:active {
+  transform: scale(0.94);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.45),
+    0 2px 8px var(--gem-ruby-glow);
+}
+
+/* Base Wide Gem Button (Cut Crystal Rectangle) */
+.gem-btn-wide {
+  flex: 1;
+  margin: 0 12px;
+  height: 52px;
+  border-radius: 14px; /* Square gem-cut with beveled corners */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+/* Emerald Gem Wide Rectangle (Start, Resume) */
+.gem-btn-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #059669 45%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 
+    inset 1.5px 1.5px 1.5px rgba(255, 255, 255, 0.85),
+    inset -1.5px -1.5px 2.5px rgba(4, 78, 59, 0.75),
+    0 8px 22px var(--gem-emerald-glow);
+}
+
+.gem-btn-emerald:active {
+  transform: scale(0.98);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.4),
+    0 3px 10px var(--gem-emerald-glow);
+}
+
+.gem-btn-wide .gem-icon {
+  font-size: 20px;
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.gem-btn-wide .action-pill-label {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-left: 10px;
+  margin-right: auto;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.3px;
+}
+
+.gem-btn-wide .action-pill-timer {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Ruby Gem Wide Rectangle (Recording Pause) */
+.gem-btn-ruby {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 45%, #b91c1c 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    inset 1.5px 1.5px 1.5px rgba(255, 255, 255, 0.85),
+    inset -1.5px -1.5px 2.5px rgba(127, 29, 29, 0.75),
+    0 10px 26px var(--gem-ruby-glow);
+}
+
+.gem-btn-ruby:active {
+  transform: scale(0.98);
+}
+
+.gem-ruby-facet {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px; /* Square gem facet */
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: #ffffff;
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.75);
+  animation: pulseGemFacet 2s infinite;
+}
+
+@keyframes pulseGemFacet {
+  0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+  70% { transform: scale(1.04); box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+  100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.pause-pill-label {
+  font-size: 17px;
+  font-weight: 800;
+  margin-left: 14px;
+  margin-right: auto;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.pause-pill-timer {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Controls Rows */
+.controls-row-idle,
+.controls-row-recording,
+.controls-row-paused {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 380px;
+}
+
+.controls-row-recording {
+  justify-content: center;
+}
+
+/* App Bottom Tab Bar (Liquid Glass Nav) */
+.bottom-tab-bar.liquid-glass-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 -4px 20px rgba(0, 30, 15, 0.1);
+  padding-top: 8px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
+}
+
+.tab-item-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 24px;
+  gap: 2px;
+  transition: color 0.15s ease;
+}
+
+.tab-icon {
+  font-size: 20px;
+}
+
+.tab-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tab-item-btn.active {
+  color: var(--gem-emerald-4);
+}
+
+.tab-item-btn.active .tab-label {
+  font-weight: 800;
+}
+
+/* Mobile Toast Floating Pill (Liquid Glass) */
+.toast-container .toast {
+  font-size: 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 12px !important;
+}
+
+/* Modal Liquid Glass Updates */
+.modal-content {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 20px 50px rgba(10, 35, 22, 0.3) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #34d399 0%, #059669 45%, #047857 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 14px var(--gem-emerald-glow) !important;
+  font-weight: 700;
+}
+
 @media (max-width: 576px) {
-  .app-container {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  .transcript-scrollable {
-    min-height: 220px;
-    max-height: calc(100vh - 380px);
-    max-height: calc(100dvh - 380px);
-  }
-  .record-btn-glow, .record-btn-pulse {
-    font-size: 1rem;
-    padding-left: 1.2rem !important;
-    padding-right: 1.2rem !important;
+  .modal-dialog {
+    margin: 16px;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
-  /* iPad / Tablet */
-  .transcript-scrollable {
-    min-height: 380px;
-    max-height: calc(100vh - 440px);
-    max-height: calc(100dvh - 440px);
+/* Large Screen & Desktop Responsive Layout (Vertical Columns for Original & Translation) */
+@media (min-width: 768px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0b1f17;
   }
-}
 
-@media (min-width: 1025px) {
-  /* Desktop PC */
-  .transcript-scrollable {
-    min-height: 440px;
-    max-height: calc(100vh - 460px);
+  .mobile-app-wrapper {
+    max-width: 1200px;
+    width: 94vw;
+    height: 92vh;
+    height: 92dvh;
+    border-radius: 28px;
+    margin: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Two Vertical Columns Side-by-Side */
+  .translation-sheet.liquid-glass {
+    flex-direction: row;
+    margin: 20px 24px 0 24px;
+    padding-top: 0;
+  }
+
+  .sheet-pane {
+    flex: 1;
+    min-width: 0;
+    padding: 24px 32px;
+  }
+
+  .pane-title {
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .pane-text-body {
+    font-size: 21px;
+    line-height: 1.7;
+  }
+
+  .empty-state-text {
+    font-size: 19px;
+  }
+
+  /* Vertical Liquid Light Divider between Left & Right Columns */
+  .sheet-divider.liquid-divider {
+    width: 1px;
+    height: 100%;
+    min-height: 100%;
+    background: linear-gradient(
+      180deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.9) 15%, 
+      rgba(255, 255, 255, 0.9) 85%, 
+      transparent
+    );
+    box-shadow: 1px 0 3px rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+  }
+
+  /* Sliders/Options Button positioned at top right of the sheet (like in the screenshot) */
+  .pane-actions {
+    position: absolute !important;
+    top: 24px;
+    right: 28px;
+    z-index: 100;
+  }
+
+  /* Centered Action Controls Deck */
+  .controls-row-idle,
+  .controls-row-recording,
+  .controls-row-paused {
+    max-width: 440px;
+  }
+
+  .language-bar {
+    padding-top: 18px;
   }
 }

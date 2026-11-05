@@ -1,6 +1,7 @@
 /**
  * SonioxService
  * Wraps @soniox/speech-to-text-web Client loaded via CDN
+ * Optimized for mobile speech-to-text and live translation.
  */
 import { SonioxClient, isActiveState } from 'https://unpkg.com/@soniox/speech-to-text-web?module';
 
@@ -14,8 +15,6 @@ export class SonioxService {
     this.finalTokens = [];
     this.nonFinalTokens = [];
     this.activeStream = null;
-    this.audioContext = null;
-    this.analyser = null;
     this.wakeLock = null;
 
     // Listeners map
@@ -24,8 +23,7 @@ export class SonioxService {
       partialResult: [],
       started: [],
       finished: [],
-      error: [],
-      audioLevel: []
+      error: []
     };
   }
 
@@ -91,7 +89,12 @@ export class SonioxService {
       this.cancel();
     }
 
-    this.clearTokens();
+    // Only clear previous tokens if not explicitly resuming/appending
+    if (!config.append) {
+      this.clearTokens();
+    } else {
+      this.nonFinalTokens = [];
+    }
 
     // Create client instance with API key
     this.client = new SonioxClient({
@@ -100,10 +103,10 @@ export class SonioxService {
       keepAliveInterval: 5000,
     });
 
-    // Acquire wake lock to keep screen on while recording (mobile/tablet/laptop)
+    // Acquire wake lock to keep screen on while recording
     this._requestWakeLock();
 
-    // Set up microphone audio stream & visualizer
+    // Set up microphone audio stream
     try {
       const audioConstraints = {
         echoCancellation: config.echoCancellation ?? true,
@@ -120,8 +123,6 @@ export class SonioxService {
       this.activeStream = await navigator.mediaDevices.getUserMedia({
         audio: audioConstraints
       });
-
-      this._setupAudioAnalyser(this.activeStream);
     } catch (err) {
       this._releaseWakeLock();
       const errorObj = {
@@ -225,6 +226,8 @@ export class SonioxService {
         console.warn('[SonioxService] Stop error:', err);
       }
     }
+    this._cleanupMedia();
+    this._releaseWakeLock();
   }
 
   cancel() {
@@ -249,43 +252,12 @@ export class SonioxService {
     }
   }
 
-  _setupAudioAnalyser(stream) {
-    try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      this.audioContext = new AudioContextClass();
-      const source = this.audioContext.createMediaStreamSource(stream);
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.6;
-      source.connect(this.analyser);
-    } catch (err) {
-      console.warn('[SonioxService] Audio visualizer setup failed:', err);
-    }
-  }
-
-  getAudioData(dataArray) {
-    if (this.analyser && this.audioContext && this.audioContext.state === 'running') {
-      this.analyser.getByteFrequencyData(dataArray);
-      return true;
-    }
-    return false;
-  }
-
   _cleanupMedia() {
     if (this.activeStream) {
       try {
         this.activeStream.getTracks().forEach((track) => track.stop());
       } catch (e) {}
       this.activeStream = null;
-    }
-    if (this.audioContext) {
-      try {
-        this.audioContext.close();
-      } catch (e) {}
-      this.audioContext = null;
-      this.analyser = null;
     }
   }
 

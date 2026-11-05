@@ -1,5 +1,5 @@
-// Soniox Speech-to-Text PWA Service Worker
-const CACHE_NAME = 'soniox-stt-v1.0.1';
+// Soniox Translator PWA Service Worker
+const CACHE_NAME = 'soniox-translator-v2.1.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -10,6 +10,7 @@ const PRECACHE_ASSETS = [
   './js/soniox-service.js',
   './js/ui-manager.js',
   './js/pwa-install.js',
+  './images/calming-green-landscape.jpg',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
