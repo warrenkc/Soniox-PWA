@@ -6,9 +6,8 @@
 
 export class UIManager {
   constructor() {
-    this.fontSizes = [15, 18, 21, 24];
-    this.fontSizeIndex = parseInt(localStorage.getItem('soniox_font_size_idx') || '1', 10);
-    this.fontSize = this.fontSizes[this.fontSizeIndex] || 18;
+    this.fontSizes = [14, 18, 24];
+    this.fontSize = parseInt(localStorage.getItem('soniox_font_size') || '18', 10);
     this.autoScroll = true;
     this.isNearBottom = true;
     this.startTime = null;
@@ -83,13 +82,21 @@ export class UIManager {
   }
 
   // --- Font Sizing & Rotation ---
-  cycleFontSize() {
-    this.fontSizeIndex = (this.fontSizeIndex + 1) % this.fontSizes.length;
-    this.fontSize = this.fontSizes[this.fontSizeIndex];
-    localStorage.setItem('soniox_font_size_idx', this.fontSizeIndex);
+  setFontSize(size) {
+    this.fontSize = Math.min(32, Math.max(12, parseInt(size, 10) || 18));
+    localStorage.setItem('soniox_font_size', this.fontSize);
     this.applyFontSize();
-    this.showToast(`Text size: ${this.fontSize}px`, 'info');
     return this.fontSize;
+  }
+
+  getFontSize() {
+    return this.fontSize;
+  }
+
+  cycleFontSize() {
+    const idx = this.fontSizes.indexOf(this.fontSize);
+    const nextIdx = (idx + 1) % this.fontSizes.length;
+    return this.setFontSize(this.fontSizes[nextIdx]);
   }
 
   applyFontSize() {

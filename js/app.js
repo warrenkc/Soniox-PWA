@@ -90,6 +90,12 @@ const elements = {
   languageModalEl: document.getElementById('languageModal'),
   exportModalEl: document.getElementById('exportModal'),
   historyModalEl: document.getElementById('historyModal'),
+  textSizeModalEl: document.getElementById('textSizeModal'),
+  textSizeValueDisplay: document.getElementById('textSizeValueDisplay'),
+  textSizeSlider: document.getElementById('textSizeSlider'),
+  btnPresetSmall: document.getElementById('btnPresetSmall'),
+  btnPresetDefault: document.getElementById('btnPresetDefault'),
+  btnPresetLarge: document.getElementById('btnPresetLarge'),
   // Settings Inputs
   apiKeyInput: document.getElementById('apiKeyInput'),
   saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
@@ -127,6 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (elements.languageModalEl) modals.language = new window.bootstrap.Modal(elements.languageModalEl);
     if (elements.exportModalEl) modals.export = new window.bootstrap.Modal(elements.exportModalEl);
     if (elements.historyModalEl) modals.history = new window.bootstrap.Modal(elements.historyModalEl);
+    if (elements.textSizeModalEl) modals.textSize = new window.bootstrap.Modal(elements.textSizeModalEl);
   }
 
   loadStoredSettings();
@@ -474,6 +481,17 @@ function renderHistoryList() {
   elements.historyListContainer.innerHTML = html;
 }
 
+// --- Text Size Modal UI Synchronization ---
+function syncTextSizeModalUI() {
+  const currentSize = ui.getFontSize();
+  if (elements.textSizeValueDisplay) elements.textSizeValueDisplay.textContent = `${currentSize}px`;
+  if (elements.textSizeSlider) elements.textSizeSlider.value = currentSize;
+
+  elements.btnPresetSmall?.classList.toggle('active', currentSize === 14);
+  elements.btnPresetDefault?.classList.toggle('active', currentSize === 18);
+  elements.btnPresetLarge?.classList.toggle('active', currentSize === 24);
+}
+
 // --- Rendering Panes ---
 function renderPanes() {
   const allTokens = [...soniox.finalTokens, ...soniox.nonFinalTokens];
@@ -613,8 +631,30 @@ function setupEventListeners() {
   });
 
   elements.menuTextSizeBtn?.addEventListener('click', () => {
-    ui.cycleFontSize();
     elements.paneOptionsMenu?.classList.add('d-none');
+    syncTextSizeModalUI();
+    if (modals.textSize) modals.textSize.show();
+  });
+
+  elements.textSizeSlider?.addEventListener('input', (e) => {
+    const size = parseInt(e.target.value, 10);
+    ui.setFontSize(size);
+    syncTextSizeModalUI();
+  });
+
+  elements.btnPresetSmall?.addEventListener('click', () => {
+    ui.setFontSize(14);
+    syncTextSizeModalUI();
+  });
+
+  elements.btnPresetDefault?.addEventListener('click', () => {
+    ui.setFontSize(18);
+    syncTextSizeModalUI();
+  });
+
+  elements.btnPresetLarge?.addEventListener('click', () => {
+    ui.setFontSize(24);
+    syncTextSizeModalUI();
   });
 
   // Save Settings Modal

@@ -647,6 +647,129 @@ html, body {
   }
 }
 
+/* --- Text Size Bottom Sheet Modal (Matching Screenshot) --- */
+.modal-dialog-bottom-sheet {
+  margin: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.text-size-sheet {
+  background: #ffffff !important;
+  border-top-left-radius: 28px !important;
+  border-top-right-radius: 28px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden;
+  animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-drag-handle {
+  width: 40px;
+  height: 5px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  margin: 12px auto 6px auto;
+}
+
+.text-size-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+.text-size-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.text-size-a-small {
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.text-size-a-large {
+  font-size: 22px;
+  font-weight: 700;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.text-size-range {
+  accent-color: #007aff;
+  cursor: pointer;
+  height: 6px;
+}
+
+.text-size-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.text-size-range::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007aff;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.4);
+  border: 2px solid #ffffff;
+  margin-top: -7px;
+}
+
+.text-size-preset-btn {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 11px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.text-size-preset-btn:hover, .text-size-preset-btn:active {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.text-size-preset-btn.active {
+  border-color: #007aff !important;
+  background: #f0f7ff !important;
+  color: #007aff !important;
+  box-shadow: 0 0 0 1px #007aff !important;
+}
+
+@media (min-width: 768px) {
+  .modal-dialog-bottom-sheet {
+    position: relative;
+    max-width: 420px;
+    margin: 1.75rem auto;
+  }
+
+  .text-size-sheet {
+    border-radius: 24px !important;
+  }
+}
+
 /* Large Screen & Desktop Responsive Layout (Vertical Columns for Original & Translation) */
 @media (min-width: 768px) {
   body {

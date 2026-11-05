@@ -422,6 +422,43 @@
   </div>
 
 
+  <!-- Text Size Bottom Sheet Modal (matching screenshot) -->
+  <div class="modal fade" id="textSizeModal" tabindex="-1" aria-labelledby="textSizeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-bottom-sheet">
+      <div class="modal-content text-size-sheet border-0 shadow">
+        <!-- Handle drag bar -->
+        <div class="sheet-drag-handle"></div>
+
+        <div class="modal-header border-0 pb-0 pt-1 px-4">
+          <h5 class="text-size-title" id="textSizeModalLabel">Text Size</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body px-4 pt-1 pb-4">
+          <!-- Size preview number -->
+          <div class="text-center my-3">
+            <span id="textSizeValueDisplay" class="text-size-value">18px</span>
+          </div>
+
+          <!-- Slider row -->
+          <div class="text-size-slider-row d-flex align-items-center gap-3 mb-4">
+            <span class="text-size-a-small">A</span>
+            <input type="range" class="form-range text-size-range" id="textSizeSlider" min="13" max="28" step="1" value="18">
+            <span class="text-size-a-large">A</span>
+          </div>
+
+          <!-- Preset buttons row -->
+          <div class="text-size-presets d-flex gap-3">
+            <button type="button" class="btn text-size-preset-btn" id="btnPresetSmall" data-size="14">Small</button>
+            <button type="button" class="btn text-size-preset-btn active" id="btnPresetDefault" data-size="18">Default</button>
+            <button type="button" class="btn text-size-preset-btn" id="btnPresetLarge" data-size="24">Large</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 2000;"></div>
 
