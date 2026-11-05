@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   checkApiKeyNotice();
+  updateTargetPaneTitle();
 
   // Check URL query parameters for initial mode (e.g. ?mode=translate-to)
   const urlParams = new URLSearchParams(window.location.search);
@@ -289,6 +290,7 @@ function setupEventListeners() {
 
   // Target Language dropdown change
   elements.targetLanguageSelect?.addEventListener('change', () => {
+    updateTargetPaneTitle();
     saveCurrentSettings();
     if (soniox.isActive()) {
       ui.showToast('Restart recording to apply new language target', 'info');
@@ -478,6 +480,16 @@ function updateStateUI(state) {
   }
 }
 
+function updateTargetPaneTitle() {
+  const select = elements.targetLanguageSelect;
+  const targetTitle = document.getElementById('targetPaneTitle');
+  if (select && targetTitle) {
+    const text = select.options[select.selectedIndex]?.text || 'English';
+    const cleanName = text.split('(')[0].trim();
+    targetTitle.textContent = cleanName;
+  }
+}
+
 function renderCurrentView() {
   const finalTokens = soniox.finalTokens;
   const nonFinalTokens = soniox.nonFinalTokens;
@@ -488,7 +500,9 @@ function renderCurrentView() {
       enableSpeakerDiarization: appSettings.enableSpeakerDiarization
     });
   } else if (currentMode === 'translate-to') {
-    ui.renderTranslationPanes(elements.origTranslateContainer, elements.targetTranslateContainer, allTokens);
+    ui.renderTranslationPanes(elements.origTranslateContainer, elements.targetTranslateContainer, allTokens, {
+      enableSpeakerDiarization: appSettings.enableSpeakerDiarization
+    });
   } else if (currentMode === 'translate-between') {
     ui.renderTwoWayDialogue(elements.dialogueContainer, allTokens, appSettings.languageA, appSettings.languageB);
   }

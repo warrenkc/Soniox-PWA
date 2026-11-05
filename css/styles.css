@@ -152,7 +152,109 @@ html, body {
   padding: 0.1em 0.3em;
 }
 
-/* Speaker card in Diarization view */
+/* Speaker Diarization Turns & Pills */
+.speaker-turn {
+  margin-bottom: 2rem;
+}
+
+.speaker-turn:last-child {
+  margin-bottom: 0.5rem;
+}
+
+.speaker-pill-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.speaker-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.22rem 0.85rem;
+  letter-spacing: 0.2px;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Light Theme Speaker Pills */
+[data-bs-theme="light"] .speaker-pill-1 {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+[data-bs-theme="light"] .speaker-pill-2 {
+  background-color: #e0f2fe;
+  color: #0288d1;
+  border: 1px solid rgba(2, 136, 209, 0.2);
+}
+
+[data-bs-theme="light"] .speaker-pill-3 {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+[data-bs-theme="light"] .speaker-pill-4 {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid rgba(126, 34, 206, 0.2);
+}
+
+[data-bs-theme="light"] .speaker-pill-5 {
+  background-color: #ffe4e6;
+  color: #be123c;
+  border: 1px solid rgba(190, 18, 60, 0.2);
+}
+
+/* Dark Theme Speaker Pills */
+[data-bs-theme="dark"] .speaker-pill-1 {
+  background-color: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+[data-bs-theme="dark"] .speaker-pill-2 {
+  background-color: rgba(56, 189, 248, 0.18);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+[data-bs-theme="dark"] .speaker-pill-3 {
+  background-color: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+[data-bs-theme="dark"] .speaker-pill-4 {
+  background-color: rgba(192, 132, 252, 0.18);
+  color: #e9d5ff;
+  border: 1px solid rgba(192, 132, 252, 0.35);
+}
+
+[data-bs-theme="dark"] .speaker-pill-5 {
+  background-color: rgba(251, 113, 133, 0.18);
+  color: #fecdd3;
+  border: 1px solid rgba(251, 113, 133, 0.35);
+}
+
+.speaker-speech-text {
+  font-size: 1.25rem;
+  line-height: 1.65;
+  letter-spacing: -0.2px;
+  word-break: break-word;
+}
+
+[data-bs-theme="light"] .speaker-speech-text {
+  color: #1e293b;
+}
+
+[data-bs-theme="dark"] .speaker-speech-text {
+  color: #f8fafc;
+}
+
+/* Speaker card fallback */
 .speaker-card {
   transition: transform 0.15s ease;
 }

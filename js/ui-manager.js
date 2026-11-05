@@ -123,11 +123,11 @@ export class UIManager {
       return;
     }
 
-    // Check if tokens have speaker information (Speaker Diarization)
-    const hasSpeakers = options.enableSpeakerDiarization && allTokens.some(t => t.speaker !== undefined && t.speaker !== null);
+    const showSpeakers = options.enableSpeakerDiarization ?? true;
 
-    if (hasSpeakers) {
-      this.renderDiarizedTranscript(container, allTokens);
+    if (showSpeakers) {
+      const groups = this.groupTokensBySpeaker(allTokens);
+      container.innerHTML = this.renderSpeakerTurnsHtml(groups);
     } else {
       this.renderPlainTranscript(container, finalTokens, nonFinalTokens);
     }
@@ -148,24 +148,28 @@ export class UIManager {
     }).join('');
 
     const nonFinalsHtml = nonFinalTokens.length > 0
-      ? `<span class="interim-text text-primary-emphasis">${this.escapeHtml(nonFinalTokens.map(t => t.text).join(''))}</span>`
+      ? `<span class="interim-text">${this.escapeHtml(nonFinalTokens.map(t => t.text).join(''))}</span>`
       : '';
 
     container.innerHTML = `
-      <div class="p-3 transcript-block">
+      <div class="speaker-speech-text p-2">
         <span class="final-text">${finalsHtml}</span>
         ${nonFinalsHtml}
       </div>
     `;
   }
 
-  renderDiarizedTranscript(container, allTokens) {
-    // Group consecutive tokens by speaker
+  groupTokensBySpeaker(tokens, defaultSpeaker = '1') {
     const groups = [];
     let currentGroup = null;
+    let activeSpeaker = defaultSpeaker;
 
-    for (const token of allTokens) {
-      const speakerId = token.speaker ?? 'Unknown';
+    for (const token of tokens) {
+      if (token.speaker !== undefined && token.speaker !== null && token.speaker !== '') {
+        activeSpeaker = String(token.speaker);
+      }
+      const speakerId = activeSpeaker;
+
       if (!currentGroup || currentGroup.speaker !== speakerId) {
         currentGroup = {
           speaker: speakerId,
@@ -181,49 +185,47 @@ export class UIManager {
         }
       }
     }
+    return groups;
+  }
 
-    let html = '';
+  renderSpeakerTurnsHtml(groups) {
+    let html = '<div class="speaker-stream">';
     groups.forEach((group) => {
       const speakerNum = parseInt(group.speaker, 10) || 1;
-      const colorStyle = this.speakerColors[(speakerNum - 1) % this.speakerColors.length];
-      const timecode = group.start_ms != null ? this.formatTimecode(group.start_ms) : '';
+      const pillClass = `speaker-pill speaker-pill-${((speakerNum - 1) % 5) + 1}`;
 
       const finals = group.tokens.filter(t => t.is_final);
       const nonFinals = group.tokens.filter(t => !t.is_final);
 
       const finalsText = finals.map(t => this.escapeHtml(t.text)).join('');
       const nonFinalsText = nonFinals.length > 0
-        ? `<span class="interim-text text-primary-emphasis">${this.escapeHtml(nonFinals.map(t => t.text).join(''))}</span>`
+        ? `<span class="interim-text">${this.escapeHtml(nonFinals.map(t => t.text).join(''))}</span>`
         : '';
 
       html += `
-        <div class="speaker-card mb-3 p-3 rounded-3 border bg-body-tertiary">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge ${colorStyle.bg} ${colorStyle.text} rounded-pill px-2 py-1">
-                <i class="bi bi-person-fill me-1"></i> Speaker ${this.escapeHtml(group.speaker)}
-              </span>
-              ${group.language ? `<span class="badge bg-secondary-subtle text-secondary">${this.escapeHtml(group.language.toUpperCase())}</span>` : ''}
-            </div>
-            ${timecode ? `<span class="text-muted small"><i class="bi bi-clock me-1"></i>${timecode}</span>` : ''}
+        <div class="speaker-turn">
+          <div class="speaker-pill-wrapper">
+            <span class="${pillClass}">Speaker ${this.escapeHtml(group.speaker)}</span>
           </div>
-          <div class="speaker-text">
-            <span>${finalsText}</span>${nonFinalsText}
+          <div class="speaker-speech-text">
+            <span class="final-text">${finalsText}</span>${nonFinalsText}
           </div>
         </div>
       `;
     });
-
-    container.innerHTML = html;
+    html += '</div>';
+    return html;
   }
 
   // --- Mode 2: Render One-Way Translation ---
-  renderTranslationPanes(origContainer, transContainer, allTokens) {
+  renderTranslationPanes(origContainer, transContainer, allTokens, options = {}) {
     const transcriptionTokens = allTokens.filter(t => t.translation_status !== 'translation');
     const translationTokens = allTokens.filter(t => t.translation_status === 'translation');
 
-    this.renderPlainTokensToPane(origContainer, transcriptionTokens, 'Original transcription will appear here...');
-    this.renderPlainTokensToPane(transContainer, translationTokens, 'Live translation will appear here...');
+    const showSpeakers = options.enableSpeakerDiarization ?? true;
+
+    this.renderPaneWithSpeakers(origContainer, transcriptionTokens, 'Transcription will appear here...', showSpeakers);
+    this.renderPaneWithSpeakers(transContainer, translationTokens, 'Translation will appear here...', showSpeakers);
 
     const origText = transcriptionTokens.map(t => t.text).join('');
     const transText = translationTokens.map(t => t.text).join('');
@@ -238,7 +240,7 @@ export class UIManager {
     this.scrollToBottom(transContainer);
   }
 
-  renderPlainTokensToPane(container, tokens, emptyPlaceholder) {
+  renderPaneWithSpeakers(container, tokens, emptyPlaceholder, showSpeakers = true) {
     if (!container) return;
 
     if (tokens.length === 0) {
@@ -250,15 +252,20 @@ export class UIManager {
       return;
     }
 
-    const finals = tokens.filter(t => t.is_final).map(t => this.escapeHtml(t.text)).join('');
-    const nonFinals = tokens.filter(t => !t.is_final).map(t => this.escapeHtml(t.text)).join('');
+    if (showSpeakers) {
+      const groups = this.groupTokensBySpeaker(tokens);
+      container.innerHTML = this.renderSpeakerTurnsHtml(groups);
+    } else {
+      const finals = tokens.filter(t => t.is_final).map(t => this.escapeHtml(t.text)).join('');
+      const nonFinals = tokens.filter(t => !t.is_final).map(t => this.escapeHtml(t.text)).join('');
 
-    container.innerHTML = `
-      <div class="p-2">
-        <span>${finals}</span>
-        ${nonFinals ? `<span class="interim-text text-primary-emphasis">${nonFinals}</span>` : ''}
-      </div>
-    `;
+      container.innerHTML = `
+        <div class="speaker-speech-text">
+          <span class="final-text">${finals}</span>
+          ${nonFinals ? `<span class="interim-text">${nonFinals}</span>` : ''}
+        </div>
+      `;
+    }
   }
 
   // --- Mode 3: Render Two-Way Dialogue Translation ---

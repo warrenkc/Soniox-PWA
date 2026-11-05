@@ -192,7 +192,8 @@
             </div>
             <div class="col-sm-4 col-md-3">
               <select id="targetLanguageSelect" class="form-select form-select-sm">
-                <option value="es" selected>Spanish (Español)</option>
+                <option value="en" selected>English</option>
+                <option value="es">Spanish (Español)</option>
                 <option value="fr">French (Français)</option>
                 <option value="de">German (Deutsch)</option>
                 <option value="it">Italian (Italiano)</option>
@@ -203,7 +204,6 @@
                 <option value="ru">Russian (Русский)</option>
                 <option value="ar">Arabic (العربية)</option>
                 <option value="hi">Hindi (हिन्दी)</option>
-                <option value="en">English</option>
               </select>
             </div>
             <div class="col-sm text-sm-end text-muted small">
@@ -219,16 +219,16 @@
             <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column">
               <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
                 <div class="d-flex align-items-center gap-2">
-                  <span class="fw-semibold small"><i class="bi bi-mic me-1"></i> Original Speech</span>
+                  <span id="origPaneTitle" class="fw-semibold text-secondary small">Transcription</span>
                   <span id="origStats" class="badge bg-body-secondary text-secondary small">0 words</span>
                 </div>
                 <button id="copyOrigTranslateBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-0">
                   <i class="bi bi-clipboard"></i>
                 </button>
               </div>
-              <div id="origTranslateContainer" class="card-body p-0 transcript-scrollable transcript-content flex-grow-1">
+              <div id="origTranslateContainer" class="card-body p-3 transcript-scrollable transcript-content flex-grow-1">
                 <div class="text-center py-4 text-muted opacity-75">
-                  <p class="small mb-0">Original transcription will appear here...</p>
+                  <p class="small mb-0">Transcription will appear here...</p>
                 </div>
               </div>
             </div>
@@ -236,19 +236,19 @@
 
           <!-- Translated Output Pane -->
           <div class="col-12 col-md-6 d-flex flex-column">
-            <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column border-primary-subtle">
+            <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column">
               <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
                 <div class="d-flex align-items-center gap-2">
-                  <span class="fw-semibold small text-primary"><i class="bi bi-translate me-1"></i> Live Translation</span>
+                  <span id="targetPaneTitle" class="fw-semibold text-secondary small">English</span>
                   <span id="transStats" class="badge bg-primary-subtle text-primary small">0 words</span>
                 </div>
                 <button id="copyTargetTranslateBtn" class="btn btn-outline-primary btn-sm rounded-pill px-2 py-0">
                   <i class="bi bi-clipboard"></i>
                 </button>
               </div>
-              <div id="targetTranslateContainer" class="card-body p-0 transcript-scrollable transcript-content flex-grow-1">
+              <div id="targetTranslateContainer" class="card-body p-3 transcript-scrollable transcript-content flex-grow-1">
                 <div class="text-center py-4 text-muted opacity-75">
-                  <p class="small mb-0">Live translation will appear here...</p>
+                  <p class="small mb-0">English translation will appear here...</p>
                 </div>
               </div>
             </div>
