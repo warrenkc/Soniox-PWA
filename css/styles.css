@@ -59,10 +59,10 @@ html, body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 480px;
+  max-width: 100%;
   height: 100vh;
   height: 100dvh;
-  margin: 0 auto;
+  margin: 0;
   position: relative;
   overflow: hidden;
   background-color: #1b4332;
@@ -97,24 +97,34 @@ html, body {
   -webkit-backdrop-filter: blur(1.5px);
 }
 
-/* Translation Sheet Card (Liquid Glass with Water-Droplet Refraction) */
+/* Translation Sheet Card (Liquid Glass - 100% Edge-to-Edge on Mobile) */
 .translation-sheet.liquid-glass {
   position: relative;
   z-index: 10;
   flex: 1;
-  margin: max(14px, env(safe-area-inset-top)) 14px 0 14px;
-  border-radius: 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 0;
   background: var(--liquid-glass-bg);
   backdrop-filter: var(--liquid-glass-blur);
   -webkit-backdrop-filter: var(--liquid-glass-blur);
-  border: 1px solid var(--liquid-glass-border);
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid var(--liquid-glass-border);
   box-shadow: 
-    var(--liquid-glass-shadow), 
+    0 8px 32px rgba(10, 35, 22, 0.16), 
     inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95),
     inset 0 -1px 2px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Upper Transcription Pane safe area padding on mobile */
+.pane-transcription {
+  padding-top: max(14px, env(safe-area-inset-top));
 }
 
 /* Individual Sheet Panes */
@@ -645,47 +655,39 @@ html, body {
   .modal-dialog {
     margin: 16px;
   }
-  .translation-sheet.liquid-glass {
-    margin: max(10px, env(safe-area-inset-top)) 6px 0 6px;
-    border-radius: 20px;
-  }
 }
 
-/* Cell Phone Maximized Edge-to-Edge Panels During Recording Session */
+/* Cell Phone Maximized 100% Width Edge-to-Edge Layout */
 @media (max-width: 767px) {
-  body.recording-session .translation-sheet.liquid-glass,
-  .mobile-app-wrapper.recording-session .translation-sheet.liquid-glass {
+  .translation-sheet.liquid-glass {
     margin-left: 0 !important;
     margin-right: 0 !important;
-    margin-top: max(8px, env(safe-area-inset-top)) !important;
+    margin-top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     border-left: none !important;
     border-right: none !important;
-    border-top-left-radius: 20px !important;
-    border-top-right-radius: 20px !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+    border-top: none !important;
+    border-radius: 0 !important;
   }
 
-  body.recording-session .sheet-pane,
-  .mobile-app-wrapper.recording-session .sheet-pane {
+  .sheet-pane {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .action-controls-container {
     padding-left: 14px !important;
     padding-right: 14px !important;
-  }
-
-  body.recording-session .action-controls-container,
-  .mobile-app-wrapper.recording-session .action-controls-container {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    width: 100% !important;
     max-width: 100% !important;
   }
 
-  body.recording-session .controls-row-recording,
-  body.recording-session .controls-row-paused,
-  .mobile-app-wrapper.recording-session .controls-row-recording,
-  .mobile-app-wrapper.recording-session .controls-row-paused {
-    max-width: 100% !important;
+  .controls-row-idle,
+  .controls-row-recording,
+  .controls-row-paused {
+    width: 100% !important;
+    max-width: 440px !important;
   }
 }
 
@@ -696,7 +698,8 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 480px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -836,6 +839,8 @@ html, body {
   .translation-sheet.liquid-glass {
     flex-direction: row;
     margin: 20px 24px 0 24px;
+    border-radius: 24px;
+    border: 1px solid var(--liquid-glass-border);
     padding-top: 0;
   }
 

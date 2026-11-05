@@ -31,7 +31,7 @@ const pwa = new PWAInstaller();
 // State
 let recordingState = 'idle'; // 'idle' | 'recording' | 'paused'
 let appSettings = {
-  model: 'stt-rt-preview',
+  model: 'stt-rt-v6',
   sourceLanguage: 'any',
   targetLanguage: 'en',
   enableSpeakerDiarization: true,
@@ -161,7 +161,11 @@ function loadStoredSettings() {
   const saved = localStorage.getItem('soniox_translator_settings');
   if (saved) {
     try {
-      appSettings = { ...appSettings, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      if (parsed.model === 'stt-rt-preview') {
+        parsed.model = 'stt-rt-v6';
+      }
+      appSettings = { ...appSettings, ...parsed };
     } catch (e) {}
   }
 
@@ -181,7 +185,7 @@ function loadStoredSettings() {
 }
 
 function saveCurrentSettings() {
-  appSettings.model = elements.modelSelect?.value || 'stt-rt-preview';
+  appSettings.model = elements.modelSelect?.value || 'stt-rt-v6';
   appSettings.enableSpeakerDiarization = !!elements.settingDiarization?.checked;
   appSettings.enableLanguageIdentification = !!elements.settingLangId?.checked;
   appSettings.enableEndpointDetection = !!elements.settingEndpoint?.checked;

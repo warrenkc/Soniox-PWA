@@ -134,7 +134,7 @@ export class SonioxService {
     }
 
     const startOptions = {
-      model: config.model || 'stt-rt-preview',
+      model: config.model || 'stt-rt-v6',
       enableSpeakerDiarization: config.enableSpeakerDiarization ?? true,
       enableLanguageIdentification: config.enableLanguageIdentification ?? true,
       enableEndpointDetection: config.enableEndpointDetection ?? true,
