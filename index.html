@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Progressive Web App for Soniox Real-Time Speech-to-Text and Live Translation">
+  
+  <!-- Apple iOS Mobile Web App Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Soniox STT">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  
+  <!-- Favicons and Web App Manifest -->
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  
+  <title>Soniox Speech-to-Text PWA</title>
+
+  <!-- Bootstrap 5.3.3 CSS via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <!-- Bootstrap Icons 1.11.3 via CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+  <!-- Offline Banner -->
+  <div id="offlineBanner" class="alert alert-warning rounded-0 border-0 mb-0 py-2 text-center d-none" role="alert">
+    <i class="bi bi-wifi-off me-2"></i> You are currently offline. Real-time transcription requires an active internet connection.
+  </div>
+
+  <!-- API Key Missing Notification Banner -->
+  <div id="apiKeyWarningBanner" class="alert alert-primary rounded-0 border-0 mb-0 py-2 text-center d-none" role="alert">
+    <i class="bi bi-key-fill me-2"></i> <strong>Soniox API Key Required:</strong> 
+    Please set your API key in Settings to begin transcribing.
+    <button id="openSettingsBannerBtn" class="btn btn-sm btn-dark ms-2 px-3 rounded-pill">Open Settings</button>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- App Navbar Header -->
+    <header class="app-navbar py-2 px-3">
+      <div class="container-xl d-flex align-items-center justify-content-between flex-wrap gap-2">
+        
+        <!-- Brand & Live Status -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <img src="./icons/icon.svg" alt="Soniox Logo" width="36" height="36" class="rounded-3 shadow-sm">
+            <span class="fs-5 brand-gradient-text">Soniox Voice</span>
+          </div>
+
+          <div id="statusBadge" class="badge rounded-pill border bg-body-tertiary text-secondary px-3 py-2 d-inline-flex align-items-center gap-2">
+            <span id="statusDot" class="status-dot bg-secondary"></span>
+            <span id="statusText" class="small fw-medium">Idle</span>
+          </div>
+        </div>
+
+        <!-- Mode Navigation Pills -->
+        <div class="btn-group p-1 bg-body-tertiary rounded-pill border" role="group" aria-label="Transcription Modes">
+          <button type="button" class="btn btn-sm mode-nav-btn active btn-primary" data-mode="transcribe">
+            <i class="bi bi-mic me-1"></i> Transcribe
+          </button>
+          <button type="button" class="btn btn-sm mode-nav-btn btn-outline-primary" data-mode="translate-to">
+            <i class="bi bi-translate me-1"></i> Translate To
+          </button>
+          <button type="button" class="btn btn-sm mode-nav-btn btn-outline-primary" data-mode="translate-between">
+            <i class="bi bi-chat-dots me-1"></i> Two-Way
+          </button>
+        </div>
+
+        <!-- Header Actions: Install, Theme, Settings -->
+        <div class="d-flex align-items-center gap-2">
+          <!-- Install PWA button (shown when installable or iOS) -->
+          <button type="button" class="btn btn-outline-success btn-sm rounded-pill btn-install-pwa d-none" title="Install Web App on device">
+            <i class="bi bi-download me-1"></i> Install App
+          </button>
+
+          <!-- Theme toggle -->
+          <button type="button" id="themeToggleBtn" class="btn btn-outline-secondary btn-sm rounded-circle p-2" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+            <i id="themeIcon" class="bi bi-moon-stars-fill text-warning"></i>
+          </button>
+
+          <!-- Settings modal trigger -->
+          <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-2" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Settings" aria-label="Settings">
+            <i class="bi bi-gear-fill"></i>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container-xl flex-grow-1 py-3 d-flex flex-column gap-3">
+
+      <!-- Metrics and Audio Visualizer Deck -->
+      <section class="card transcript-card p-3 shadow-sm">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+          
+          <!-- Live Timers & Metrics -->
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center text-muted small">
+              <i class="bi bi-stopwatch me-1 text-primary"></i>
+              <span id="timerDisplay" class="fw-bold font-monospace fs-6 text-body">00:00</span>
+            </div>
+            <span class="text-secondary opacity-50">|</span>
+            <div class="small text-muted">
+              <span id="statsWords" class="fw-medium text-body">0 words</span>
+            </div>
+            <span class="text-secondary opacity-50">|</span>
+            <div class="small text-muted">
+              <span id="statsChars" class="fw-medium text-body">0 chars</span>
+            </div>
+          </div>
+
+          <!-- Toolbar: Font sizing & Export buttons -->
+          <div class="d-flex align-items-center gap-2">
+            <!-- Font size controls -->
+            <div class="btn-group btn-group-sm" role="group" aria-label="Font sizing">
+              <button id="fontSizeDecreaseBtn" class="btn btn-outline-secondary py-1 px-2" title="Decrease font size">
+                <i class="bi bi-fonts fs-6"></i>-
+              </button>
+              <button id="fontSizeIncreaseBtn" class="btn btn-outline-secondary py-1 px-2" title="Increase font size">
+                <i class="bi bi-fonts fs-6"></i>+
+              </button>
+            </div>
+
+            <!-- Export dropdown -->
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-box-arrow-up me-1"></i> Export
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow">
+                <li><button id="exportTxtBtn" class="dropdown-item" type="button"><i class="bi bi-file-text me-2"></i>Text (.txt)</button></li>
+                <li><button id="exportSrtBtn" class="dropdown-item" type="button"><i class="bi bi-badge-cc me-2"></i>Subtitles (.srt)</button></li>
+                <li><button id="exportJsonBtn" class="dropdown-item" type="button"><i class="bi bi-braces me-2"></i>Structured JSON (.json)</button></li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Audio Waveform Visualizer Canvas -->
+        <div class="visualizer-wrapper">
+          <canvas id="audioVisualizer" class="visualizer-canvas" width="600" height="48"></canvas>
+        </div>
+      </section>
+
+      <!-- View 1: Standard Real-Time Transcription -->
+      <section id="viewTranscribe" class="flex-grow-1 d-flex flex-column position-relative">
+        <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column">
+          
+          <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-semibold small"><i class="bi bi-card-text me-1 text-primary"></i> Live Transcript</span>
+            </div>
+            <button id="copyTranscribeBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+              <i class="bi bi-clipboard me-1"></i> Copy
+            </button>
+          </div>
+
+          <div id="transcribeContainer" class="card-body p-0 transcript-scrollable transcript-content flex-grow-1">
+            <div class="empty-state text-center py-5 text-muted">
+              <i class="bi bi-mic display-4 d-block mb-3 opacity-50"></i>
+              <h5 class="fw-semibold">Ready to listen</h5>
+              <p class="small mb-0">Click <strong>Start Listening</strong> or tap the microphone below.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Floating Scroll to Bottom Button -->
+        <button id="scrollToBottomBtn" class="btn btn-primary btn-sm rounded-pill scroll-bottom-btn d-none">
+          <i class="bi bi-arrow-down-short fs-5"></i> New speech below
+        </button>
+      </section>
+
+      <!-- View 2: One-Way Real-Time Translation -->
+      <section id="viewTranslateTo" class="flex-grow-1 d-flex flex-column d-none">
+        
+        <!-- Language Target Bar -->
+        <div class="card transcript-card p-3 mb-3 shadow-sm">
+          <div class="row align-items-center g-2">
+            <div class="col-sm-auto">
+              <span class="fw-semibold small text-muted"><i class="bi bi-globe me-1 text-primary"></i> Target Language:</span>
+            </div>
+            <div class="col-sm-4 col-md-3">
+              <select id="targetLanguageSelect" class="form-select form-select-sm">
+                <option value="es" selected>Spanish (Español)</option>
+                <option value="fr">French (Français)</option>
+                <option value="de">German (Deutsch)</option>
+                <option value="it">Italian (Italiano)</option>
+                <option value="pt">Portuguese (Português)</option>
+                <option value="zh">Chinese (Mandarin)</option>
+                <option value="ja">Japanese (日本語)</option>
+                <option value="ko">Korean (한국어)</option>
+                <option value="ru">Russian (Русский)</option>
+                <option value="ar">Arabic (العربية)</option>
+                <option value="hi">Hindi (हिन्दी)</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="col-sm text-sm-end text-muted small">
+              Real-time speech is transcribed and concurrently translated.
+            </div>
+          </div>
+        </div>
+
+        <!-- Dual Panes: Original vs Translation -->
+        <div class="row g-3 flex-grow-1">
+          <!-- Original Spoken Audio Pane -->
+          <div class="col-12 col-md-6 d-flex flex-column">
+            <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column">
+              <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-semibold small"><i class="bi bi-mic me-1"></i> Original Speech</span>
+                  <span id="origStats" class="badge bg-body-secondary text-secondary small">0 words</span>
+                </div>
+                <button id="copyOrigTranslateBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-0">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div id="origTranslateContainer" class="card-body p-0 transcript-scrollable transcript-content flex-grow-1">
+                <div class="text-center py-4 text-muted opacity-75">
+                  <p class="small mb-0">Original transcription will appear here...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Translated Output Pane -->
+          <div class="col-12 col-md-6 d-flex flex-column">
+            <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column border-primary-subtle">
+              <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-semibold small text-primary"><i class="bi bi-translate me-1"></i> Live Translation</span>
+                  <span id="transStats" class="badge bg-primary-subtle text-primary small">0 words</span>
+                </div>
+                <button id="copyTargetTranslateBtn" class="btn btn-outline-primary btn-sm rounded-pill px-2 py-0">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div id="targetTranslateContainer" class="card-body p-0 transcript-scrollable transcript-content flex-grow-1">
+                <div class="text-center py-4 text-muted opacity-75">
+                  <p class="small mb-0">Live translation will appear here...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- View 3: Two-Way Bilingual Conversation -->
+      <section id="viewTranslateBetween" class="flex-grow-1 d-flex flex-column d-none">
+        <!-- Dual Language Selection Header -->
+        <div class="card transcript-card p-3 mb-3 shadow-sm">
+          <div class="row align-items-center g-2">
+            <div class="col-sm-5 col-md-4 d-flex align-items-center gap-2">
+              <span class="small fw-semibold text-muted">Speaker A:</span>
+              <select id="languageASelect" class="form-select form-select-sm">
+                <option value="en" selected>English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+              </select>
+            </div>
+            <div class="col-sm-2 text-center text-muted">
+              <i class="bi bi-arrow-left-right fs-5 text-primary"></i>
+            </div>
+            <div class="col-sm-5 col-md-4 d-flex align-items-center gap-2">
+              <span class="small fw-semibold text-muted">Speaker B:</span>
+              <select id="languageBSelect" class="form-select form-select-sm">
+                <option value="es" selected>Spanish</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Conversation Bubble Container -->
+        <div class="card transcript-card flex-grow-1 shadow-sm d-flex flex-column">
+          <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-2 px-3">
+            <span class="fw-semibold small"><i class="bi bi-chat-left-dots me-1 text-primary"></i> Bilingual Dialogue</span>
+            <button id="copyDialogueBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+              <i class="bi bi-clipboard me-1"></i> Copy
+            </button>
+          </div>
+          <div id="dialogueContainer" class="card-body p-2 transcript-scrollable transcript-content flex-grow-1">
+            <div class="empty-state text-center py-5 text-muted">
+              <i class="bi bi-chat-quote display-4 d-block mb-3 opacity-50"></i>
+              <h5 class="fw-semibold">Two-Way Conversation</h5>
+              <p class="small mb-0">Speak in either language. Speech will automatically route to each participant's side.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Sticky Bottom Control Deck (Responsive on Mobile, iPad, and PC) -->
+    <footer class="control-deck">
+      <div class="container-xl d-flex align-items-center justify-content-between flex-wrap gap-3">
+        
+        <!-- Left: Clear & Reset -->
+        <div class="d-flex align-items-center gap-2">
+          <button id="clearBtn" class="btn btn-outline-secondary rounded-pill px-3" title="Clear current transcript">
+            <i class="bi bi-trash3 me-1"></i> Clear
+          </button>
+        </div>
+
+        <!-- Center: Primary Record Toggle Button -->
+        <div class="d-flex align-items-center justify-content-center gap-2">
+          <button id="recordBtn" type="button" class="btn btn-primary btn-lg rounded-pill shadow-lg px-4 record-btn-glow" aria-label="Toggle voice transcription">
+            <i id="recordBtnIcon" class="bi bi-mic-fill me-2 fs-5"></i>
+            <span id="recordBtnText" class="fw-semibold">Start Listening</span>
+          </button>
+        </div>
+
+        <!-- Right: Finalize & Cancel -->
+        <div class="d-flex align-items-center gap-2">
+          <button id="finalizeBtn" class="btn btn-outline-secondary rounded-pill px-3" disabled title="Force finalization of pending words">
+            <i class="bi bi-check2-circle me-1"></i> Finalize
+          </button>
+          <button id="cancelBtn" class="btn btn-outline-danger rounded-pill px-3" disabled title="Cancel without saving">
+            <i class="bi bi-x-circle me-1"></i> Cancel
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Desktop keyboard shortcut hint -->
+      <div class="text-center d-none d-md-block pt-1">
+        <span class="text-muted" style="font-size: 0.75rem;">
+          Tip: Press <kbd class="bg-body-secondary text-body px-1 py-0 rounded">Space</kbd> to toggle microphone, <kbd class="bg-body-secondary text-body px-1 py-0 rounded">Esc</kbd> to cancel.
+        </span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content rounded-4 shadow">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title fw-bold" id="settingsModalLabel">
+            <i class="bi bi-sliders2 me-2 text-primary"></i> Soniox Settings
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="settingsForm" onsubmit="return false;">
+            
+            <!-- Soniox API Key -->
+            <div class="mb-3">
+              <label for="apiKeyInput" class="form-label fw-semibold">
+                Soniox API Key <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="apiKeyInput" placeholder="Enter your Soniox API key..." autocomplete="off">
+                <button class="btn btn-outline-secondary" type="button" id="toggleApiKeyVisibility" title="Show/Hide Key">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="form-text">
+                Need an API key? Get one at <a href="https://console.soniox.com/" target="_blank" rel="noopener" class="text-primary">console.soniox.com</a>.
+                Saved securely in browser local storage.
+              </div>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="mb-3">
+              <label for="modelSelect" class="form-label fw-semibold">Model</label>
+              <select class="form-select" id="modelSelect">
+                <option value="stt-rt-preview" selected>stt-rt-preview (Recommended: Ultra-low latency)</option>
+                <option value="stt-rt-v5">stt-rt-v5 (Standard Production)</option>
+              </select>
+            </div>
+
+            <!-- Audio Microphone Selector -->
+            <div class="mb-3">
+              <label for="micSelect" class="form-label fw-semibold">Microphone Input</label>
+              <select class="form-select" id="micSelect">
+                <option value="">Default Microphone</option>
+              </select>
+              <div class="form-text">Select external microphone, AirPods, or headset.</div>
+            </div>
+
+            <!-- Soniox AI Features -->
+            <h6 class="fw-bold mt-4 mb-2 text-primary"><i class="bi bi-stars me-1"></i> Recognition Features</h6>
+            
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingDiarization" checked>
+              <label class="form-check-label" for="settingDiarization">
+                <strong>Speaker Diarization</strong>
+                <span class="d-block small text-muted">Identify and label distinct speakers (Speaker 1, Speaker 2).</span>
+              </label>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingLangId" checked>
+              <label class="form-check-label" for="settingLangId">
+                <strong>Language Identification</strong>
+                <span class="d-block small text-muted">Automatically detect the spoken language for each phrase.</span>
+              </label>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingEndpoint" checked>
+              <label class="form-check-label" for="settingEndpoint">
+                <strong>Endpoint Detection</strong>
+                <span class="d-block small text-muted">Finalize pending words instantly when a speaker pauses.</span>
+              </label>
+            </div>
+
+            <!-- Audio Filters -->
+            <h6 class="fw-bold mt-4 mb-2 text-primary"><i class="bi bi-soundwave me-1"></i> Audio Processing</h6>
+
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="settingNoise" checked>
+                  <label class="form-check-label small" for="settingNoise">Noise Suppr.</label>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="settingEcho" checked>
+                  <label class="form-check-label small" for="settingEcho">Echo Cancel</label>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="settingGain" checked>
+                  <label class="form-check-label small" for="settingGain">Auto Gain</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Domain Terms & Language Hints -->
+            <h6 class="fw-bold mt-4 mb-2 text-primary"><i class="bi bi-card-checklist me-1"></i> Hints & Domain Context</h6>
+
+            <div class="mb-3">
+              <label for="settingLangHints" class="form-label small fw-semibold">Language Hints (comma-separated):</label>
+              <input type="text" class="form-control form-control-sm" id="settingLangHints" placeholder="e.g. en, es, fr">
+              <div class="form-text">Biases speech recognition towards specified ISO language codes.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="settingCustomTerms" class="form-label small fw-semibold">Custom Terms / Vocabulary (comma-separated):</label>
+              <textarea class="form-control form-control-sm" id="settingCustomTerms" rows="2" placeholder="e.g. Soniox, Kubernetes, Zyrtec, Celebrex, PostgreSQL"></textarea>
+              <div class="form-text">Improves accuracy for technical jargon, acronyms, or medical terms.</div>
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="saveApiKeyBtn" class="btn btn-primary rounded-pill px-4">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS / iPad Safari Install Help Modal -->
+  <div class="modal fade" id="iosInstallModal" tabindex="-1" aria-labelledby="iosInstallModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title fw-bold" id="iosInstallModalLabel">
+            <i class="bi bi-apple me-2"></i> Install on iPhone / iPad
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <img src="./icons/apple-touch-icon.png" alt="App Icon" width="72" height="72" class="rounded-4 mb-3 shadow">
+          <h5 class="fw-bold mb-2">Install Soniox Voice STT</h5>
+          <p class="text-muted small mb-4">Install this Progressive Web App on your home screen for full-screen voice dictation and instant access.</p>
+          
+          <div class="d-flex flex-column gap-3 text-start bg-body-tertiary p-3 rounded-3 border">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-primary rounded-circle p-2">1</span>
+              <span>Tap the <strong>Share</strong> button <i class="bi bi-box-arrow-up text-primary fs-5"></i> in Safari's bottom toolbar.</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-primary rounded-circle p-2">2</span>
+              <span>Scroll down and tap <strong>Add to Home Screen</strong> <i class="bi bi-plus-square text-primary fs-5"></i>.</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-primary rounded-circle p-2">3</span>
+              <span>Tap <strong>Add</strong> in the top-right corner.</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-primary rounded-pill px-4 w-100" data-bs-dismiss="modal">Got it!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;"></div>
+
+  <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+  <!-- Load Soniox Web SDK via CDN -->
+  <script type="module">
+    import { SonioxClient } from 'https://unpkg.com/@soniox/speech-to-text-web?module';
+    window.SonioxClient = SonioxClient;
+  </script>
+
+  <!-- Load Soniox Web SDK via CDN and initialize App -->
+  <script type="module" src="./js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "soniox-speech-to-text-pwa",
+  "version": "1.0.0",
+  "description": "Progressive Web App for Soniox Real-Time Speech-to-Text and Live Translation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "generate-icons": "node generate-icons.js"
+  },
+  "keywords": [
+    "pwa",
+    "speech-to-text",
+    "soniox",
+    "vanilla-javascript",
+    "bootstrap5",
+    "live-transcription",
+    "real-time-translation"
+  ],
+  "author": "",
+  "license": "MIT"
+}
