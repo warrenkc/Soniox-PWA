@@ -56,6 +56,7 @@ const elements = {
   targetTranslateContainer: document.getElementById('targetTranslateContainer'),
   dialogueContainer: document.getElementById('dialogueContainer'),
   targetLanguageSelect: document.getElementById('targetLanguageSelect'),
+  translateDiarizationToggle: document.getElementById('translateDiarizationToggle'),
   languageASelect: document.getElementById('languageASelect'),
   languageBSelect: document.getElementById('languageBSelect'),
   // Settings Inputs
@@ -105,7 +106,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   checkApiKeyNotice();
-  updateTargetPaneTitle();
 
   // Check URL query parameters for initial mode (e.g. ?mode=translate-to)
   const urlParams = new URLSearchParams(window.location.search);
@@ -154,6 +154,7 @@ function loadStoredSettings() {
   }
   if (elements.modelSelect) elements.modelSelect.value = appSettings.model;
   if (elements.settingDiarization) elements.settingDiarization.checked = appSettings.enableSpeakerDiarization;
+  if (elements.translateDiarizationToggle) elements.translateDiarizationToggle.checked = appSettings.enableSpeakerDiarization;
   if (elements.settingLangId) elements.settingLangId.checked = appSettings.enableLanguageIdentification;
   if (elements.settingEndpoint) elements.settingEndpoint.checked = appSettings.enableEndpointDetection;
   if (elements.settingEcho) elements.settingEcho.checked = appSettings.echoCancellation;
@@ -290,11 +291,24 @@ function setupEventListeners() {
 
   // Target Language dropdown change
   elements.targetLanguageSelect?.addEventListener('change', () => {
-    updateTargetPaneTitle();
     saveCurrentSettings();
     if (soniox.isActive()) {
       ui.showToast('Restart recording to apply new language target', 'info');
     }
+  });
+
+  // Diarization toggle in translation header
+  elements.translateDiarizationToggle?.addEventListener('change', (e) => {
+    appSettings.enableSpeakerDiarization = e.target.checked;
+    if (elements.settingDiarization) elements.settingDiarization.checked = e.target.checked;
+    saveCurrentSettings();
+    renderCurrentView();
+    ui.showToast(e.target.checked ? 'Speaker Diarization enabled for translation' : 'Speaker Diarization hidden in translation', 'info');
+  });
+
+  // Keep modal toggle synced too
+  elements.settingDiarization?.addEventListener('change', (e) => {
+    if (elements.translateDiarizationToggle) elements.translateDiarizationToggle.checked = e.target.checked;
   });
 
   // Copy Buttons
@@ -322,21 +336,44 @@ function setupEventListeners() {
   });
 }
 
+function formatTokensWithSpeakers(tokens, isDiarized) {
+  if (!isDiarized) return tokens.map(t => t.text).join('');
+  let output = '';
+  let currentSpeaker = null;
+  for (const t of tokens) {
+    if (t.speaker != null && t.speaker !== currentSpeaker) {
+      currentSpeaker = t.speaker;
+      output += `\n\n[Speaker ${currentSpeaker}]: `;
+    }
+    output += t.text;
+  }
+  return output.trim();
+}
+
 function setupCopyButtons() {
   document.getElementById('copyTranscribeBtn')?.addEventListener('click', (e) => {
-    const text = soniox.finalTokens.map(t => t.text).join('') + soniox.nonFinalTokens.map(t => t.text).join('');
+    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
+    const text = formatTokensWithSpeakers(all, appSettings.enableSpeakerDiarization);
     ui.copyToClipboard(text, e.currentTarget);
   });
 
   document.getElementById('copyOrigTranslateBtn')?.addEventListener('click', (e) => {
     const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
-    const text = all.filter(t => t.translation_status !== 'translation').map(t => t.text).join('');
+    const origTokens = all.filter(t => t.translation_status !== 'translation');
+    const text = formatTokensWithSpeakers(origTokens, appSettings.enableSpeakerDiarization);
     ui.copyToClipboard(text, e.currentTarget);
   });
 
   document.getElementById('copyTargetTranslateBtn')?.addEventListener('click', (e) => {
-    const all = [...soniox.finalTokens, ...soniox.nonFinalTokens];
-    const text = all.filter(t => t.translation_status === 'translation').map(t => t.text).join('');
+    let activeSpeaker = '1';
+    const processed = [...soniox.finalTokens, ...soniox.nonFinalTokens].map(t => {
+      const clone = { ...t };
+      if (clone.speaker != null) activeSpeaker = clone.speaker;
+      else if (clone.translation_status === 'translation') clone.speaker = activeSpeaker;
+      return clone;
+    });
+    const transTokens = processed.filter(t => t.translation_status === 'translation');
+    const text = formatTokensWithSpeakers(transTokens, appSettings.enableSpeakerDiarization);
     ui.copyToClipboard(text, e.currentTarget);
   });
 
@@ -477,16 +514,6 @@ function updateStateUI(state) {
       elements.finalizeBtn?.setAttribute('disabled', 'true');
       elements.cancelBtn?.setAttribute('disabled', 'true');
     }
-  }
-}
-
-function updateTargetPaneTitle() {
-  const select = elements.targetLanguageSelect;
-  const targetTitle = document.getElementById('targetPaneTitle');
-  if (select && targetTitle) {
-    const text = select.options[select.selectedIndex]?.text || 'English';
-    const cleanName = text.split('(')[0].trim();
-    targetTitle.textContent = cleanName;
   }
 }
 

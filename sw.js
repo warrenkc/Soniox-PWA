@@ -1,5 +1,5 @@
 // Soniox Speech-to-Text PWA Service Worker
-const CACHE_NAME = 'soniox-stt-v1.0.0';
+const CACHE_NAME = 'soniox-stt-v1.0.1';
 
 const PRECACHE_ASSETS = [
   './',
