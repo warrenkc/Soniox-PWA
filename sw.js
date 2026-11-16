@@ -1,5 +1,5 @@
 // Soniox Translator PWA Service Worker
-const CACHE_NAME = 'soniox-translator-v2.1.7';
+const CACHE_NAME = 'soniox-translator-v2.1.8';
 
 const PRECACHE_ASSETS = [
   './',

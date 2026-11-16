@@ -869,6 +869,8 @@ html, body {
   /* Two Vertical Columns Side-by-Side */
   .translation-sheet.liquid-glass {
     flex-direction: row;
+    /* width:auto (not 100%) so the side margins don't push the sheet past the frame */
+    width: auto;
     margin: 20px 24px 0 24px;
     border-radius: 24px;
     border: 1px solid var(--liquid-glass-border);
@@ -911,11 +913,22 @@ html, body {
     flex-shrink: 0;
   }
 
-  /* Sliders/Options Button positioned at top right of the sheet (like in the screenshot) */
+  /* Sliders/Options Button positioned at the top right corner of the whole sheet.
+     It lives in the left pane (which stays position:relative for its jump-to-latest pill),
+     so shift it across the equal-width right pane plus the 1px divider. */
   .pane-actions {
     position: absolute !important;
-    top: 24px;
-    right: 28px;
+    top: 20px;
+    right: calc(20px - 100% - 1px);
+    z-index: 100;
+  }
+
+  /* Let the shifted options button escape the left pane's clipping (text scrolls in .pane-content) */
+  .pane-transcription {
+    overflow: visible;
+  }
+
+  .pane-actions {
     z-index: 100;
   }
 
