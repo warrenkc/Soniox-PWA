@@ -90,7 +90,6 @@ const elements = {
   settingsModalEl: document.getElementById('settingsModal'),
   languageModalEl: document.getElementById('languageModal'),
   exportModalEl: document.getElementById('exportModal'),
-  historyModalEl: document.getElementById('historyModal'),
   textSizeModalEl: document.getElementById('textSizeModal'),
   textSizeValueDisplay: document.getElementById('textSizeValueDisplay'),
   textSizeSlider: document.getElementById('textSizeSlider'),
@@ -123,6 +122,7 @@ const elements = {
   exportJsonBtn: document.getElementById('exportJsonBtn'),
   // History Elements
   historyListContainer: document.getElementById('historyListContainer'),
+  historyCount: document.getElementById('historyCount'),
   clearHistoryBtn: document.getElementById('clearHistoryBtn'),
 };
 
@@ -135,7 +135,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (elements.settingsModalEl) modals.settings = new window.bootstrap.Modal(elements.settingsModalEl);
     if (elements.languageModalEl) modals.language = new window.bootstrap.Modal(elements.languageModalEl);
     if (elements.exportModalEl) modals.export = new window.bootstrap.Modal(elements.exportModalEl);
-    if (elements.historyModalEl) modals.history = new window.bootstrap.Modal(elements.historyModalEl);
     if (elements.textSizeModalEl) modals.textSize = new window.bootstrap.Modal(elements.textSizeModalEl);
   }
 
@@ -472,49 +471,92 @@ function saveSessionToHistory() {
   }
 }
 
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('soniox_history') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
 function renderHistoryList() {
   if (!elements.historyListContainer) return;
 
-  let history = [];
-  try {
-    history = JSON.parse(localStorage.getItem('soniox_history') || '[]');
-  } catch (e) {}
+  const history = loadHistory();
+
+  if (elements.historyCount) {
+    elements.historyCount.textContent = `${history.length} saved conversation${history.length === 1 ? '' : 's'}`;
+  }
+  elements.clearHistoryBtn?.classList.toggle('d-none', history.length === 0);
 
   if (history.length === 0) {
     elements.historyListContainer.innerHTML = `
-      <div class="text-center py-5 text-muted">
-        <i class="bi bi-clock display-4 d-block mb-3 opacity-50"></i>
-        <h6 class="fw-semibold">No saved conversations yet</h6>
-        <p class="small mb-0">Completed recordings and translations will appear here.</p>
+      <div class="history-empty">
+        <i class="bi bi-clock-history"></i>
+        <h2>No saved conversations yet</h2>
+        <p>Tap the save button or finish a recording, and it will appear here.</p>
       </div>
     `;
     return;
   }
 
-  let html = '<div class="d-flex flex-column gap-3">';
-  history.forEach(item => {
-    html += `
-      <div class="card p-3 rounded-3 border bg-body-tertiary">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 small">
-            ${ui.escapeHtml(item.sourceLang)} ➔ ${ui.escapeHtml(item.targetLang)}
-          </span>
-          <span class="text-muted small">${ui.escapeHtml(item.date)}</span>
+  elements.historyListContainer.innerHTML = history.map(item => `
+    <article class="history-card" data-id="${ui.escapeHtml(String(item.id))}">
+      <header class="history-card-head">
+        <span class="history-lang-badge">${ui.escapeHtml(item.sourceLang)} <i class="bi bi-arrow-right"></i> ${ui.escapeHtml(item.targetLang)}</span>
+        <span class="history-date">${ui.escapeHtml(item.date)}</span>
+      </header>
+      <div class="history-card-body">
+        <div class="history-block">
+          <span class="pane-title">Original</span>
+          <p>${ui.escapeHtml(item.origText || '(No speech)')}</p>
         </div>
-        <div class="small mb-2">
-          <strong class="d-block text-muted" style="font-size: 11px;">ORIGINAL</strong>
-          <span>${ui.escapeHtml(item.origText || '(No speech)')}</span>
-        </div>
-        <div class="small">
-          <strong class="d-block text-primary" style="font-size: 11px;">TRANSLATION</strong>
-          <span class="fw-medium">${ui.escapeHtml(item.transText || '(No translation)')}</span>
+        <div class="history-block history-block-trans">
+          <span class="pane-title">Translation</span>
+          <p>${ui.escapeHtml(item.transText || '(No translation)')}</p>
         </div>
       </div>
-    `;
-  });
-  html += '</div>';
+      <footer class="history-card-actions">
+        <button type="button" class="history-action-btn" data-action="copy-orig"><i class="bi bi-copy"></i> Original</button>
+        <button type="button" class="history-action-btn" data-action="copy-trans"><i class="bi bi-copy"></i> Translation</button>
+        <button type="button" class="history-action-btn history-action-danger" data-action="delete" aria-label="Delete conversation"><i class="bi bi-trash3"></i></button>
+      </footer>
+    </article>
+  `).join('');
+}
 
-  elements.historyListContainer.innerHTML = html;
+function handleHistoryAction(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const card = btn.closest('.history-card');
+  const id = card?.dataset.id;
+  const history = loadHistory();
+  const item = history.find(h => String(h.id) === id);
+  if (!item) return;
+
+  const action = btn.dataset.action;
+  if (action === 'copy-orig') {
+    ui.copyToClipboard(item.origText || '', 'Original copied!');
+  } else if (action === 'copy-trans') {
+    ui.copyToClipboard(item.transText || '', 'Translation copied!');
+  } else if (action === 'delete') {
+    const remaining = history.filter(h => String(h.id) !== id);
+    localStorage.setItem('soniox_history', JSON.stringify(remaining));
+    renderHistoryList();
+    ui.showToast('Conversation deleted', 'info');
+  }
+}
+
+// --- View Switching (Translator / History) ---
+function switchView(view) {
+  const isHistory = view === 'history';
+  if (isHistory) renderHistoryList();
+  document.body.classList.toggle('view-history', isHistory);
+  elements.tabHistory?.classList.toggle('active', isHistory);
+  elements.tabTranslator?.classList.toggle('active', !isHistory);
+  elements.tabHistory?.setAttribute('aria-selected', String(isHistory));
+  elements.tabTranslator?.setAttribute('aria-selected', String(!isHistory));
+  elements.paneOptionsMenu?.classList.add('d-none');
 }
 
 // --- Text Size Modal UI Synchronization ---
@@ -620,18 +662,15 @@ function setupEventListeners() {
   });
 
   // Bottom Tabs
-  elements.tabHistory?.addEventListener('click', () => {
-    renderHistoryList();
-    if (modals.history) modals.history.show();
-  });
+  elements.tabHistory?.addEventListener('click', () => switchView('history'));
+  elements.historyListContainer?.addEventListener('click', handleHistoryAction);
   elements.clearHistoryBtn?.addEventListener('click', () => {
+    if (!confirm('Delete all saved conversations? This cannot be undone.')) return;
     localStorage.removeItem('soniox_history');
     renderHistoryList();
     ui.showToast('History cleared', 'info');
   });
-  elements.tabTranslator?.addEventListener('click', () => {
-    // Already in Translator
-  });
+  elements.tabTranslator?.addEventListener('click', () => switchView('translator'));
 
   // Options Menu Popover (Screenshot 1)
   elements.paneOptionsBtn?.addEventListener('click', (e) => {

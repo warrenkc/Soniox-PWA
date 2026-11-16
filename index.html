@@ -37,7 +37,7 @@
     <div class="landscape-backdrop" aria-hidden="true"></div>
 
     <!-- Main Liquid Glass Translation Sheet -->
-    <main class="translation-sheet liquid-glass">
+    <main id="translatorView" class="translation-sheet liquid-glass translator-only">
       
       <!-- Upper Section: Transcription (Original Speech) -->
       <section class="sheet-pane pane-transcription position-relative">
@@ -94,11 +94,25 @@
 
     </main>
 
+    <!-- History View (full-screen, switched via bottom tab bar) -->
+    <section id="historyView" class="translation-sheet liquid-glass history-view history-only" aria-labelledby="historyViewTitle">
+      <div class="history-header">
+        <div>
+          <h1 id="historyViewTitle" class="history-title">History</h1>
+          <span id="historyCount" class="pane-title">0 saved conversations</span>
+        </div>
+        <button id="clearHistoryBtn" type="button" class="history-clear-btn">
+          <i class="bi bi-trash3"></i> Clear all
+        </button>
+      </div>
+      <div id="historyListContainer" class="pane-content history-list"></div>
+    </section>
+
     <!-- Bottom Controls Deck -->
     <footer class="bottom-control-deck">
 
       <!-- Language Selector Bar ("Any ➔ English" Crystal Tiles) -->
-      <div id="languageSelectorBar" class="language-bar">
+      <div id="languageSelectorBar" class="language-bar translator-only">
         <button id="sourceLangPill" class="gem-tile-btn" type="button">
           <span id="sourceLangLabel">Any</span>
         </button>
@@ -111,7 +125,7 @@
       </div>
 
       <!-- Floating Action Controls (Square Gemstones) -->
-      <div class="action-controls-container">
+      <div class="action-controls-container translator-only">
 
         <!-- STATE 1: IDLE CONTROLS (Square Gem-Cut Buttons) -->
         <div id="controlsIdle" class="controls-row-idle">
@@ -168,11 +182,11 @@
 
       <!-- App Bottom Tab Bar (Liquid Glass Nav) -->
       <nav id="bottomTabBar" class="bottom-tab-bar liquid-glass-nav">
-        <button id="tabHistory" class="tab-item-btn" type="button">
+        <button id="tabHistory" class="tab-item-btn" type="button" aria-controls="historyView" aria-selected="false">
           <i class="bi bi-clock-history tab-icon"></i>
           <span class="tab-label">History</span>
         </button>
-        <button id="tabTranslator" class="tab-item-btn active" type="button">
+        <button id="tabTranslator" class="tab-item-btn active" type="button" aria-controls="translatorView" aria-selected="true">
           <i class="bi bi-translate tab-icon"></i>
           <span class="tab-label">Translator</span>
         </button>
@@ -402,31 +416,6 @@
               <small class="text-muted">Full raw token data and speaker timecodes</small>
             </div>
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- History Modal / Drawer -->
-  <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content rounded-4 shadow border-0">
-        <div class="modal-header border-bottom py-3 px-4">
-          <h5 class="modal-title fw-bold" id="historyModalLabel">
-            <i class="bi bi-clock-history me-2 text-primary"></i> Saved Conversations
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-4" id="historyListContainer">
-          <div class="text-center py-5 text-muted">
-            <i class="bi bi-clock display-4 d-block mb-3 opacity-50"></i>
-            <h6 class="fw-semibold">No saved conversations yet</h6>
-            <p class="small mb-0">Completed recordings and translations will appear here.</p>
-          </div>
-        </div>
-        <div class="modal-footer border-top p-3 d-flex justify-content-between">
-          <button id="clearHistoryBtn" type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3">Clear All</button>
-          <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
