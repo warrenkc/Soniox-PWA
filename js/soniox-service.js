@@ -106,29 +106,18 @@ export class SonioxService {
     // Acquire wake lock to keep screen on while recording
     this._requestWakeLock();
 
-    // Set up microphone audio stream
+    // Set up audio stream (microphone, system audio, or both mixed)
     try {
-      const audioConstraints = {
-        echoCancellation: config.echoCancellation ?? true,
-        noiseSuppression: config.noiseSuppression ?? true,
-        autoGainControl: config.autoGainControl ?? true,
-        channelCount: 1,
-        sampleRate: 44100
-      };
-
-      if (config.deviceId) {
-        audioConstraints.deviceId = { exact: config.deviceId };
-      }
-
-      this.activeStream = await navigator.mediaDevices.getUserMedia({
-        audio: audioConstraints
-      });
+      this.activeStream = await this._acquireAudioStream(config);
     } catch (err) {
+      this._cleanupMedia();
       this._releaseWakeLock();
-      const errorObj = {
-        status: 'microphone_access_denied',
-        message: `Microphone error: ${err.name} - ${err.message}. Please allow microphone access in browser settings.`
-      };
+      const errorObj = err.status
+        ? { status: err.status, message: err.message }
+        : {
+            status: 'microphone_access_denied',
+            message: `Microphone error: ${err.name} - ${err.message}. Please allow microphone access in browser settings.`
+          };
       this.emit('error', errorObj);
       throw err;
     }
@@ -252,12 +241,119 @@ export class SonioxService {
     }
   }
 
+  static isSystemAudioSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  }
+
+  async _getMicStream(config) {
+    const audioConstraints = {
+      echoCancellation: config.echoCancellation ?? true,
+      noiseSuppression: config.noiseSuppression ?? true,
+      autoGainControl: config.autoGainControl ?? true,
+      channelCount: 1,
+      sampleRate: 44100
+    };
+    if (config.deviceId) {
+      audioConstraints.deviceId = { exact: config.deviceId };
+    }
+    return navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+  }
+
+  async _getSystemStream() {
+    if (!SonioxService.isSystemAudioSupported()) {
+      const e = new Error('System audio capture is not supported in this browser. Use a desktop Chromium browser (Chrome/Edge).');
+      e.status = 'system_audio_unsupported';
+      throw e;
+    }
+    let displayStream;
+    try {
+      // Video is required by most browsers; it is discarded (not sent to Soniox).
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        },
+        systemAudio: 'include',
+        selfBrowserSurface: 'exclude',
+        preferCurrentTab: false
+      });
+    } catch (err) {
+      const e = new Error(`System audio error: ${err.name} - ${err.message}. Sharing was cancelled or blocked.`);
+      e.status = 'system_audio_denied';
+      throw e;
+    }
+
+    if (displayStream.getAudioTracks().length === 0) {
+      displayStream.getTracks().forEach((t) => t.stop());
+      const e = new Error('No audio was shared. When choosing what to share, pick a tab or entire screen and enable "Share audio" / "Share system audio".');
+      e.status = 'system_audio_missing';
+      throw e;
+    }
+    return displayStream;
+  }
+
+  /**
+   * Returns an audio-only MediaStream for the requested source.
+   * config.audioSource: 'mic' (default) | 'system' | 'both'
+   */
+  async _acquireAudioStream(config) {
+    const source = config.audioSource || 'mic';
+    this._extraStreams = [];
+
+    if (source === 'mic') {
+      return this._getMicStream(config);
+    }
+
+    const displayStream = await this._getSystemStream();
+    this._extraStreams.push(displayStream);
+
+    // If the user clicks the browser's "Stop sharing" bar, stop transcription.
+    displayStream.getTracks().forEach((t) => {
+      t.addEventListener('ended', () => {
+        if (this.isActive()) this.stop();
+      });
+    });
+
+    if (source === 'system') {
+      // Audio-only stream; the video track stays alive (sharing continues) but isn't recorded.
+      return new MediaStream(displayStream.getAudioTracks());
+    }
+
+    // 'both': mix microphone + system audio into a single track
+    const micStream = await this._getMicStream(config);
+    this._extraStreams.push(micStream);
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    this._audioContext = new AudioCtx();
+    const destination = this._audioContext.createMediaStreamDestination();
+    this._audioContext.createMediaStreamSource(new MediaStream(displayStream.getAudioTracks())).connect(destination);
+    this._audioContext.createMediaStreamSource(micStream).connect(destination);
+    if (this._audioContext.state === 'suspended') {
+      try { await this._audioContext.resume(); } catch (e) {}
+    }
+    return destination.stream;
+  }
+
   _cleanupMedia() {
     if (this.activeStream) {
       try {
         this.activeStream.getTracks().forEach((track) => track.stop());
       } catch (e) {}
       this.activeStream = null;
+    }
+    if (this._extraStreams) {
+      for (const s of this._extraStreams) {
+        try {
+          s.getTracks().forEach((track) => track.stop());
+        } catch (e) {}
+      }
+      this._extraStreams = [];
+    }
+    if (this._audioContext) {
+      try { this._audioContext.close(); } catch (e) {}
+      this._audioContext = null;
     }
   }
 

@@ -38,6 +38,7 @@ let appSettings = {
   enableLanguageIdentification: true,
   enableEndpointDetection: true,
   deviceId: '',
+  audioSource: 'mic',
   echoCancellation: true,
   noiseSuppression: true,
   autoGainControl: true,
@@ -101,6 +102,8 @@ const elements = {
   saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
   toggleApiKeyVisibility: document.getElementById('toggleApiKeyVisibility'),
   micSelect: document.getElementById('micSelect'),
+  audioSourceSelect: document.getElementById('audioSourceSelect'),
+  micSelectGroup: document.getElementById('micSelectGroup'),
   modelSelect: document.getElementById('modelSelect'),
   settingDiarization: document.getElementById('settingDiarization'),
   settingLangId: document.getElementById('settingLangId'),
@@ -171,6 +174,14 @@ function loadStoredSettings() {
 
   if (elements.apiKeyInput) elements.apiKeyInput.value = soniox.getApiKey();
   if (elements.modelSelect) elements.modelSelect.value = appSettings.model;
+  if (elements.audioSourceSelect) {
+    if (!SonioxService.isSystemAudioSupported()) {
+      elements.audioSourceSelect.querySelectorAll('option[value="system"], option[value="both"]').forEach(o => { o.disabled = true; });
+      if (appSettings.audioSource !== 'mic') appSettings.audioSource = 'mic';
+    }
+    elements.audioSourceSelect.value = appSettings.audioSource || 'mic';
+    updateAudioSourceUI();
+  }
   if (elements.settingDiarization) elements.settingDiarization.checked = appSettings.enableSpeakerDiarization;
   if (elements.settingLangId) elements.settingLangId.checked = appSettings.enableLanguageIdentification;
   if (elements.settingEndpoint) elements.settingEndpoint.checked = appSettings.enableEndpointDetection;
@@ -193,6 +204,7 @@ function saveCurrentSettings() {
   appSettings.noiseSuppression = !!elements.settingNoise?.checked;
   appSettings.autoGainControl = !!elements.settingGain?.checked;
   appSettings.deviceId = elements.micSelect?.value || '';
+  appSettings.audioSource = elements.audioSourceSelect?.value || 'mic';
 
   const hintsVal = elements.settingLangHints?.value || '';
   appSettings.languageHints = hintsVal.split(',').map(s => s.trim()).filter(Boolean);
@@ -214,6 +226,11 @@ function updateLanguageUI() {
 }
 
 // --- Audio Devices ---
+function updateAudioSourceUI() {
+  const source = elements.audioSourceSelect?.value || 'mic';
+  elements.micSelectGroup?.classList.toggle('d-none', source === 'system');
+}
+
 async function enumerateAudioDevices() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
   try {
@@ -305,6 +322,7 @@ async function startTranslation(isResume = false) {
     noiseSuppression: appSettings.noiseSuppression,
     autoGainControl: appSettings.autoGainControl,
     deviceId: appSettings.deviceId || undefined,
+    audioSource: appSettings.audioSource || 'mic',
     append: isResume,
     translation: {
       type: 'one_way',
@@ -568,6 +586,8 @@ function setupEventListeners() {
   elements.targetLangPill?.addEventListener('click', () => {
     if (modals.language) modals.language.show();
   });
+
+  elements.audioSourceSelect?.addEventListener('change', updateAudioSourceUI);
 
   // Language Modal Apply
   elements.applyLanguageBtn?.addEventListener('click', () => {

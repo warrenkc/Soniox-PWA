@@ -221,8 +221,19 @@
               </select>
             </div>
 
-            <!-- Audio Microphone Selector -->
+            <!-- Audio Source Selector -->
             <div class="mb-3">
+              <label for="audioSourceSelect" class="form-label fw-semibold">Audio Source</label>
+              <select class="form-select rounded-3" id="audioSourceSelect">
+                <option value="mic" selected>Microphone</option>
+                <option value="system">System Audio (screen / tab share)</option>
+                <option value="both">Microphone + System Audio</option>
+              </select>
+              <div class="form-text" id="audioSourceHelp">For system audio, choose a tab or entire screen when prompted and enable "Share audio". Desktop Chrome/Edge only.</div>
+            </div>
+
+            <!-- Audio Microphone Selector -->
+            <div class="mb-3" id="micSelectGroup">
               <label for="micSelect" class="form-label fw-semibold">Microphone Input</label>
               <select class="form-select rounded-3" id="micSelect">
                 <option value="">Default Microphone</option>

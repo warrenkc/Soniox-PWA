@@ -4,6 +4,8 @@ A responsive, high-performance Progressive Web App (PWA) for real-time speech-to
 
 Optimized to look and perform across **cell phones (iOS & Android)**, **iPads / Tablets**, and **PC desktop browsers**.
 
+🌐 **Live app:** [https://warrenkc.github.io/Soniox-PWA/](https://warrenkc.github.io/Soniox-PWA/)
+
 ---
 
 ## 🌟 Key Features
