@@ -1135,3 +1135,60 @@ body.view-history .history-only {
   background: #ffffff;
   font-weight: 500;
 }
+
+/* --- Installed desktop app: Window Controls Overlay title bar --- */
+/* The native title bar is hidden in this mode, so we provide our own drag region. */
+.wco-titlebar {
+  display: none;
+}
+
+@media (display-mode: window-controls-overlay) {
+  .wco-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    top: env(titlebar-area-y, 0);
+    left: env(titlebar-area-x, 0);
+    width: env(titlebar-area-width, 100%);
+    height: env(titlebar-area-height, 33px);
+    padding: 0 12px;
+    z-index: 1000;
+    app-region: drag;
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  .wco-titlebar-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .wco-titlebar-title {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Push the app below the title bar / window buttons */
+  body {
+    padding-top: env(titlebar-area-height, 33px);
+  }
+
+  .mobile-app-wrapper {
+    height: calc(100vh - env(titlebar-area-height, 33px));
+    height: calc(100dvh - env(titlebar-area-height, 33px));
+  }
+}
+
+@media (display-mode: window-controls-overlay) and (min-width: 768px) {
+  .mobile-app-wrapper {
+    height: calc(92vh - env(titlebar-area-height, 33px));
+    height: calc(92dvh - env(titlebar-area-height, 33px));
+  }
+}
