@@ -8,8 +8,6 @@ export class UIManager {
   constructor() {
     this.fontSizes = [14, 18, 24];
     this.fontSize = parseInt(localStorage.getItem('soniox_font_size') || '18', 10);
-    this.autoScroll = true;
-    this.isNearBottom = true;
     this.startTime = null;
     this.timerInterval = null;
     this.accumulatedSeconds = 0;
@@ -116,21 +114,68 @@ export class UIManager {
   }
 
   // --- Auto-Scroll Detection ---
+  // Each pane "follows" the live text only while the user is at the bottom.
+  // Scrolling up pauses following for that pane; scrolling back to the bottom
+  // (or tapping the jump button) resumes it.
   setupAutoScrollDetection() {
     const containers = document.querySelectorAll('.transcript-scrollable');
     containers.forEach(container => {
-      container.addEventListener('scroll', () => {
-        const threshold = 50;
-        const position = container.scrollHeight - container.scrollTop - container.clientHeight;
-        this.isNearBottom = position < threshold;
+      container._follow = true;
+      container._lastScrollTop = container.scrollTop;
+
+      const jumpBtn = document.createElement('button');
+      jumpBtn.type = 'button';
+      jumpBtn.className = 'jump-latest-btn';
+      jumpBtn.setAttribute('aria-label', 'Jump to latest');
+      jumpBtn.innerHTML = '<i class="bi bi-arrow-down"></i><span>Latest</span>';
+      jumpBtn.hidden = true;
+      jumpBtn.addEventListener('click', () => {
+        container._follow = true;
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        this.updateJumpButton(container);
       });
+      container.parentElement?.appendChild(jumpBtn);
+      container._jumpBtn = jumpBtn;
+
+      container.addEventListener('scroll', () => {
+        const top = container.scrollTop;
+        if (this.isAtBottom(container)) {
+          container._follow = true;
+        } else if (top < container._lastScrollTop - 2) {
+          // Moved upward and away from the bottom: the user is reading back.
+          container._follow = false;
+        }
+        container._lastScrollTop = top;
+        this.updateJumpButton(container);
+      }, { passive: true });
     });
   }
 
+  isAtBottom(container, threshold = 40) {
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+  }
+
+  updateJumpButton(container) {
+    const btn = container?._jumpBtn;
+    if (!btn) return;
+    const overflowing = container.scrollHeight > container.clientHeight + 1;
+    btn.hidden = container._follow !== false || !overflowing;
+  }
+
+  resetFollow(container) {
+    if (!container) return;
+    container._follow = true;
+    this.updateJumpButton(container);
+  }
+
   scrollToBottom(container) {
-    if (container && (this.autoScroll || this.isNearBottom)) {
-      container.scrollTop = container.scrollHeight;
+    if (!container) return;
+    if (container._follow !== false) {
+      // Instant jump so the smooth-scroll animation doesn't lag behind new text.
+      container.scrollTo({ top: container.scrollHeight, behavior: 'instant' });
+      container._lastScrollTop = container.scrollTop;
     }
+    this.updateJumpButton(container);
   }
 
   // --- Dual-Pane Translation Rendering ---
@@ -166,6 +211,12 @@ export class UIManager {
     } else {
       this.renderPlainToPane(origContainer, transcriptionTokens, origPlaceholder);
       this.renderPlainToPane(transContainer, translationTokens, transPlaceholder);
+    }
+
+    if (allTokens.length === 0) {
+      // Fresh / cleared session: go back to following live text.
+      this.resetFollow(origContainer);
+      this.resetFollow(transContainer);
     }
 
     this.scrollToBottom(origContainer);
