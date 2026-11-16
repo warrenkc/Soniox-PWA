@@ -113,15 +113,15 @@
 
       <!-- Language Selector Bar ("Any ➔ English" Crystal Tiles) -->
       <div id="languageSelectorBar" class="language-bar translator-only">
-        <button id="sourceLangPill" class="gem-tile-btn" type="button">
-          <span id="sourceLangLabel">Any</span>
-        </button>
+        <select id="sourceLangSelect" class="gem-tile-btn gem-tile-select" aria-label="Speech language (input)">
+          <option value="any">Auto-detect</option>
+        </select>
         <div class="lang-arrow-icon">
           <i class="bi bi-arrow-right"></i>
         </div>
-        <button id="targetLangPill" class="gem-tile-btn" type="button">
-          <span id="targetLangLabel">English</span>
-        </button>
+        <select id="targetLangSelect" class="gem-tile-btn gem-tile-select" aria-label="Translation language (output)">
+          <option value="en">English</option>
+        </select>
       </div>
 
       <!-- Floating Action Controls (Square Gemstones) -->
@@ -323,62 +323,6 @@
         <div class="modal-footer border-top p-3">
           <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
           <button type="button" id="saveApiKeyBtn" class="btn btn-primary rounded-pill px-4">Save Settings</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Language Picker Modal -->
-  <div class="modal fade" id="languageModal" tabindex="-1" aria-labelledby="languageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content rounded-4 shadow border-0">
-        <div class="modal-header border-bottom py-3 px-4">
-          <h5 class="modal-title fw-bold" id="languageModalLabel">
-            <i class="bi bi-translate me-2 text-primary"></i> Select Languages
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-4">
-          <div class="mb-4">
-            <label for="selectSourceLang" class="form-label fw-semibold">Source Language (Speech Input)</label>
-            <select id="selectSourceLang" class="form-select rounded-3">
-              <option value="any" selected>Any (Auto-Detect Language)</option>
-              <option value="en">English</option>
-              <option value="es">Spanish (Español)</option>
-              <option value="fr">French (Français)</option>
-              <option value="de">German (Deutsch)</option>
-              <option value="zh">Chinese (Mandarin)</option>
-              <option value="ja">Japanese (日本語)</option>
-              <option value="ko">Korean (한국어)</option>
-              <option value="it">Italian (Italiano)</option>
-              <option value="pt">Portuguese (Português)</option>
-              <option value="ru">Russian (Русский)</option>
-              <option value="ar">Arabic (العربية)</option>
-              <option value="hi">Hindi (हिन्दी)</option>
-            </select>
-            <div class="form-text">Choose 'Any' to let Soniox AI detect the language spoken automatically.</div>
-          </div>
-
-          <div class="mb-3">
-            <label for="selectTargetLang" class="form-label fw-semibold">Target Language (Translation Output)</label>
-            <select id="selectTargetLang" class="form-select rounded-3">
-              <option value="en" selected>English</option>
-              <option value="es">Spanish (Español)</option>
-              <option value="fr">French (Français)</option>
-              <option value="de">German (Deutsch)</option>
-              <option value="zh">Chinese (Mandarin)</option>
-              <option value="ja">Japanese (日本語)</option>
-              <option value="ko">Korean (한국어)</option>
-              <option value="it">Italian (Italiano)</option>
-              <option value="pt">Portuguese (Português)</option>
-              <option value="ru">Russian (Русский)</option>
-              <option value="ar">Arabic (العربية)</option>
-              <option value="hi">Hindi (हिन्दी)</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer border-top p-3">
-          <button type="button" class="btn btn-primary rounded-pill px-4 w-100" data-bs-dismiss="modal" id="applyLanguageBtn">Done</button>
         </div>
       </div>
     </div>

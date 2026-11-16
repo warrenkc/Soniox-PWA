@@ -6,21 +6,70 @@ import { SonioxService } from './soniox-service.js';
 import { UIManager } from './ui-manager.js';
 import { PWAInstaller } from './pwa-install.js';
 
-// Language Map
+// Languages supported by Soniox real-time STT + translation (any pair)
+// https://docs.soniox.com/stt/concepts/supported-languages
 const LANGUAGE_NAMES = {
-  any: 'Any',
-  en: 'English',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  zh: 'Chinese',
-  ja: 'Japanese',
-  ko: 'Korean',
-  it: 'Italian',
-  pt: 'Portuguese',
-  ru: 'Russian',
+  any: 'Auto-detect',
+  af: 'Afrikaans',
+  sq: 'Albanian',
   ar: 'Arabic',
+  az: 'Azerbaijani',
+  eu: 'Basque',
+  be: 'Belarusian',
+  bn: 'Bengali',
+  bs: 'Bosnian',
+  bg: 'Bulgarian',
+  ca: 'Catalan',
+  zh: 'Chinese',
+  hr: 'Croatian',
+  cs: 'Czech',
+  da: 'Danish',
+  nl: 'Dutch',
+  en: 'English',
+  et: 'Estonian',
+  fi: 'Finnish',
+  fr: 'French',
+  gl: 'Galician',
+  de: 'German',
+  el: 'Greek',
+  gu: 'Gujarati',
+  he: 'Hebrew',
   hi: 'Hindi',
+  hu: 'Hungarian',
+  id: 'Indonesian',
+  it: 'Italian',
+  ja: 'Japanese',
+  kn: 'Kannada',
+  kk: 'Kazakh',
+  ko: 'Korean',
+  lv: 'Latvian',
+  lt: 'Lithuanian',
+  mk: 'Macedonian',
+  ms: 'Malay',
+  ml: 'Malayalam',
+  mr: 'Marathi',
+  no: 'Norwegian',
+  fa: 'Persian',
+  pl: 'Polish',
+  pt: 'Portuguese',
+  pa: 'Punjabi',
+  ro: 'Romanian',
+  ru: 'Russian',
+  sr: 'Serbian',
+  sk: 'Slovak',
+  sl: 'Slovenian',
+  es: 'Spanish',
+  sw: 'Swahili',
+  sv: 'Swedish',
+  tl: 'Tagalog',
+  ta: 'Tamil',
+  te: 'Telugu',
+  th: 'Thai',
+  tr: 'Turkish',
+  uk: 'Ukrainian',
+  ur: 'Urdu',
+  vi: 'Vietnamese',
+  cy: 'Welsh',
 };
 
 // Initialize services
@@ -63,10 +112,8 @@ const elements = {
   menuTextSizeBtn: document.getElementById('menuTextSizeBtn'),
   // Language Selector Bar
   languageSelectorBar: document.getElementById('languageSelectorBar'),
-  sourceLangPill: document.getElementById('sourceLangPill'),
-  sourceLangLabel: document.getElementById('sourceLangLabel'),
-  targetLangPill: document.getElementById('targetLangPill'),
-  targetLangLabel: document.getElementById('targetLangLabel'),
+  sourceLangSelect: document.getElementById('sourceLangSelect'),
+  targetLangSelect: document.getElementById('targetLangSelect'),
   // Controls
   controlsIdle: document.getElementById('controlsIdle'),
   controlsRecording: document.getElementById('controlsRecording'),
@@ -88,7 +135,6 @@ const elements = {
   tabTranslator: document.getElementById('tabTranslator'),
   // Modals
   settingsModalEl: document.getElementById('settingsModal'),
-  languageModalEl: document.getElementById('languageModal'),
   exportModalEl: document.getElementById('exportModal'),
   textSizeModalEl: document.getElementById('textSizeModal'),
   textSizeValueDisplay: document.getElementById('textSizeValueDisplay'),
@@ -113,9 +159,6 @@ const elements = {
   settingLangHints: document.getElementById('settingLangHints'),
   settingCustomTerms: document.getElementById('settingCustomTerms'),
   // Language Modal Selects
-  selectSourceLang: document.getElementById('selectSourceLang'),
-  selectTargetLang: document.getElementById('selectTargetLang'),
-  applyLanguageBtn: document.getElementById('applyLanguageBtn'),
   // Export Buttons
   exportTxtBtn: document.getElementById('exportTxtBtn'),
   exportSrtBtn: document.getElementById('exportSrtBtn'),
@@ -133,11 +176,11 @@ let modals = {};
 document.addEventListener('DOMContentLoaded', async () => {
   if (window.bootstrap) {
     if (elements.settingsModalEl) modals.settings = new window.bootstrap.Modal(elements.settingsModalEl);
-    if (elements.languageModalEl) modals.language = new window.bootstrap.Modal(elements.languageModalEl);
     if (elements.exportModalEl) modals.export = new window.bootstrap.Modal(elements.exportModalEl);
     if (elements.textSizeModalEl) modals.textSize = new window.bootstrap.Modal(elements.textSizeModalEl);
   }
 
+  populateLanguageSelects();
   loadStoredSettings();
   ui.init();
   pwa.init();
@@ -190,8 +233,8 @@ function loadStoredSettings() {
   if (elements.settingLangHints) elements.settingLangHints.value = (appSettings.languageHints || []).join(', ');
   if (elements.settingCustomTerms) elements.settingCustomTerms.value = appSettings.customTerms || '';
 
-  if (elements.selectSourceLang) elements.selectSourceLang.value = appSettings.sourceLanguage || 'any';
-  if (elements.selectTargetLang) elements.selectTargetLang.value = appSettings.targetLanguage || 'en';
+  if (!LANGUAGE_NAMES[appSettings.sourceLanguage]) appSettings.sourceLanguage = 'any';
+  if (!LANGUAGE_NAMES[appSettings.targetLanguage] || appSettings.targetLanguage === 'any') appSettings.targetLanguage = 'en';
 }
 
 function saveCurrentSettings() {
@@ -212,12 +255,39 @@ function saveCurrentSettings() {
   localStorage.setItem('soniox_translator_settings', JSON.stringify(appSettings));
 }
 
+function populateLanguageSelects() {
+  const sorted = Object.entries(LANGUAGE_NAMES)
+    .filter(([code]) => code !== 'any')
+    .sort((a, b) => a[1].localeCompare(b[1]));
+  const optionsHtml = sorted.map(([code, name]) => `<option value="${code}">${name}</option>`).join('');
+  if (elements.sourceLangSelect) {
+    elements.sourceLangSelect.innerHTML = `<option value="any">Auto-detect</option>${optionsHtml}`;
+  }
+  if (elements.targetLangSelect) {
+    elements.targetLangSelect.innerHTML = optionsHtml;
+  }
+}
+
+function onLanguageChange() {
+  appSettings.sourceLanguage = elements.sourceLangSelect?.value || 'any';
+  appSettings.targetLanguage = elements.targetLangSelect?.value || 'en';
+  saveCurrentSettings();
+  updateLanguageUI();
+  renderPanes();
+}
+
 function updateLanguageUI() {
   const srcName = LANGUAGE_NAMES[appSettings.sourceLanguage] || 'Any';
   const trgName = LANGUAGE_NAMES[appSettings.targetLanguage] || 'English';
 
-  if (elements.sourceLangLabel) elements.sourceLangLabel.textContent = srcName;
-  if (elements.targetLangLabel) elements.targetLangLabel.textContent = trgName;
+  if (elements.sourceLangSelect) {
+    elements.sourceLangSelect.value = appSettings.sourceLanguage || 'any';
+    elements.sourceLangSelect.title = `Speech language: ${srcName}`;
+  }
+  if (elements.targetLangSelect) {
+    elements.targetLangSelect.value = appSettings.targetLanguage || 'en';
+    elements.targetLangSelect.title = `Translate to: ${trgName}`;
+  }
 
   if (elements.transPaneTitle) elements.transPaneTitle.textContent = `${trgName.toUpperCase()} TRANSLATION`;
   if (elements.menuCopyTransLabel) elements.menuCopyTransLabel.textContent = `Copy ${trgName}`;
@@ -621,25 +691,12 @@ function setupEventListeners() {
     if (modals.settings) modals.settings.show();
   });
 
-  // Language Pill Triggers
-  elements.sourceLangPill?.addEventListener('click', () => {
-    if (modals.language) modals.language.show();
-  });
-  elements.targetLangPill?.addEventListener('click', () => {
-    if (modals.language) modals.language.show();
-  });
+  // Language Dropdowns
+  elements.sourceLangSelect?.addEventListener('change', onLanguageChange);
+  elements.targetLangSelect?.addEventListener('change', onLanguageChange);
 
   elements.audioSourceSelect?.addEventListener('change', updateAudioSourceUI);
 
-  // Language Modal Apply
-  elements.applyLanguageBtn?.addEventListener('click', () => {
-    appSettings.sourceLanguage = elements.selectSourceLang?.value || 'any';
-    appSettings.targetLanguage = elements.selectTargetLang?.value || 'en';
-    saveCurrentSettings();
-    updateLanguageUI();
-    renderPanes();
-    ui.showToast(`Target set to ${LANGUAGE_NAMES[appSettings.targetLanguage]}`, 'success');
-  });
 
   // Save to History Button Trigger
   elements.btnSaveToHistory?.addEventListener('click', () => {
